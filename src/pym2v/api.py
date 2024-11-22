@@ -11,7 +11,7 @@ class EurogardAPI:
         self._settings = settings
         self._session = self.create_session()
 
-    def create_session(self):
+    def create_session(self) -> OAuth2Session:
         client = LegacyApplicationClient(client_id=self._settings.client_id)
         oauth = OAuth2Session(client=client)
         oauth.fetch_token(
@@ -21,6 +21,7 @@ class EurogardAPI:
             client_id=self._settings.client_id,
             client_secret=self._settings.client_secret,
         )
+
         return oauth
 
     def get_user_info(self):
