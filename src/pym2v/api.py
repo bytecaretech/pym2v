@@ -3,9 +3,8 @@ from typing import Any
 from oauthlib.oauth2 import LegacyApplicationClient
 from requests_oauthlib import OAuth2Session
 
+from .constants import TOKEN_ROUTE
 from .settings import SETTINGS, Settings
-
-TOKEN_ROUTE = "/auth/realms/iiot-platform/protocol/openid-connect/token"
 
 
 class EurogardAPI:
