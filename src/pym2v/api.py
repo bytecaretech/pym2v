@@ -135,7 +135,7 @@ class EurogardAPI:
             "values": data_definition_key_item_names,
             "start": start,
             "end": end,
-            "machine": machine_uuid,
+            "machineUuid": machine_uuid,
             "intervalInS": interval_in_s,
         }
         response = self._session.post(
