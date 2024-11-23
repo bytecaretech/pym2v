@@ -5,7 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "pandas>=2.2.3",
+    "pandas[excel]>=2.2.3",
     "pydantic-settings>=2.6.1",
     "requests-oauthlib>=2.0.0",
 ]
