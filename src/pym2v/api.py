@@ -1,10 +1,16 @@
+from datetime import date, datetime, timedelta
 from typing import Any
 
+import numpy as np
+import pandas as pd
 from oauthlib.oauth2 import LegacyApplicationClient
 from requests_oauthlib import OAuth2Session
 
 from .constants import TOKEN_ROUTE
 from .settings import SETTINGS, Settings
+
+type TsInput = np.integer | pd.Timestamp | float | str | date | datetime | np.datetime64
+type IntInput = str | int | pd.Timedelta | timedelta | np.timedelta64
 
 
 class EurogardAPI:
@@ -145,3 +151,28 @@ class EurogardAPI:
         response.raise_for_status()
 
         return response.json()
+
+    def get_frame_from_names(
+        self, machine_uuid: str, names: list[str], start: TsInput, end: TsInput, interval: IntInput
+    ) -> pd.DataFrame:
+        ts_start = pd.Timestamp(start)
+        ts_end = pd.Timestamp(end)
+        int_interval = pd.Timedelta(interval)
+
+        result = self.get_historical_data(
+            machine_uuid,
+            data_definition_key_item_names=names,
+            start=int(ts_start.timestamp() * 1000),
+            end=int(ts_end.timestamp() * 1000),
+            interval_in_s=int(int_interval.total_seconds()),
+        )
+
+        dfs = {}
+        for res in result["results"]:
+            dff = pd.DataFrame.from_records(res["values"])
+            dff = dff.set_index(pd.to_datetime(dff["timestamp"], unit="ms"))
+            dfs[res["dataDefinitionKeyItemName"]] = dff["value"]
+
+        df = pd.concat(dfs, axis="columns")
+
+        return df
