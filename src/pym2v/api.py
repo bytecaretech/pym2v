@@ -1,10 +1,16 @@
+from datetime import date, datetime, timedelta
 from typing import Any
 
+import numpy as np
+import pandas as pd
 from oauthlib.oauth2 import LegacyApplicationClient
 from requests_oauthlib import OAuth2Session
 
 from .constants import TOKEN_ROUTE
 from .settings import SETTINGS, Settings
+
+type TsInput = np.integer | pd.Timestamp | float | str | date | datetime | np.datetime64
+type IntInput = str | int | pd.Timedelta | timedelta | np.timedelta64
 
 
 class EurogardAPI:
