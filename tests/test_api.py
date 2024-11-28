@@ -137,7 +137,7 @@ def test_get_historical_data(api):
         )
         assert historical_data == {"results": []}
         mock_post.assert_called_once_with(
-            f"{TEST_URL}/machine-controller/postDataByRangeAndInterval",
+            f"{TEST_URL}/backend/machine-controller/postDataByRangeAndInterval",
             json={
                 "condition": "",
                 "values": ["name1", "name2"],
@@ -160,7 +160,7 @@ def test_get_frame_from_names(api):
 
         start = datetime.now() - timedelta(days=1)
         end = datetime.now()
-        interval = "1H"
+        interval = "1h"
 
         df = api.get_frame_from_names(
             machine_uuid="1234", names=["name1", "name2"], start=start, end=end, interval=interval
