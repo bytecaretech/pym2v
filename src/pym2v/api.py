@@ -145,7 +145,7 @@ class EurogardAPI:
             "intervalInS": interval_in_s,
         }
         response = self._session.post(
-            f"{self._settings.base_url}/machine-controller/postDataByRangeAndInterval",
+            f"{self._settings.base_url}/backend/machine-controller/postDataByRangeAndInterval",
             json=data,
         )
         response.raise_for_status()
