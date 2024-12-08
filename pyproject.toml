@@ -1,13 +1,15 @@
 [project]
 name = "pym2v"
-version = "0.1.0"
+version = "0.1.1"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "loguru>=0.7.3",
     "pandas[excel]>=2.2.3",
     "pydantic-settings>=2.6.1",
     "requests-oauthlib>=2.0.0",
+    "tenacity>=9.0.0",
 ]
 
 [build-system]
@@ -21,6 +23,7 @@ dev-dependencies = [
     "pytest-cov>=6.0.0",
     "pytest>=8.3.3",
     "pre-commit>=4.0.1",
+    "nbconvert>=7.16.4",
 ]
 
 [tool.ruff]
