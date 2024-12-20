@@ -12,7 +12,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential_jitter
 from tqdm.auto import tqdm
 
 from .constants import TOKEN_ROUTE
-from .settings import SETTINGS, Settings
+from .settings import Settings
 from .types import IntInput, TsInput
 from .utils import _log_retry_attempt, batch_interval
 
@@ -22,13 +22,18 @@ _limit = asyncio.Semaphore(5)
 class EurogardAPI:
     """Pythonic interface to interact with the Eurogard backend services."""
 
-    def __init__(self, settings: Settings = SETTINGS):
+    def __init__(self, settings: Settings | None = None):
         """
-        Initialize the EurogardAPI instance.
+        EurogardAPI is the main class for interacting with the Eurogard m2v IoT platform.
+
+        If settings are not provided, they will be loaded from environment variables or a .env file.
 
         Args:
-            settings (Settings): Configuration settings for the API client.
+            settings (Settings, optional): An instance of the Settings class containing API configuration.
+                Defaults to None.
         """
+        if settings is None:
+            settings = Settings()  # type: ignore
         self._settings = settings
         self._token_url = settings.base_url + TOKEN_ROUTE
         self._session = self.create_session()
@@ -91,11 +96,11 @@ class EurogardAPI:
         Retrieve a list of routers.
 
         Args:
-            page (int): Page number, starting from 0.
-            size (int): Number of items per page.
-            sort (str): Sort field (e.g., name, companyName, online, locationName).
-            order (str): Sort order (asc or desc).
-            filter (str): Filter criteria (e.g., __archived:false).
+            page (int, optional): Page number, starting from 0. Defaults to 0.
+            size (int, optional): Number of items per page. Defaults to 10.
+            sort (str, optional): Sort field (e.g., name, companyName, online, locationName). Defaults to "name".
+            order (str, optional): Sort order (asc or desc). Defaults to "asc".
+            filter (str, optional): Filter criteria (e.g., __archived:false). Defaults to "__archived:false".
 
         Returns:
             dict[str, Any]: List of routers.
@@ -132,11 +137,12 @@ class EurogardAPI:
         Retrieve a list of machines.
 
         Args:
-            page (int): Page number, starting from 0.
-            size (int): Number of items per page.
-            sort (str): Sort field (e.g., name, companyName, thingName, machineTypeDefinitionName, lastConnection).
-            order (str): Sort order (asc or desc).
-            filter (str): Filter criteria (e.g., __archived:false).
+            page (int, optional): Page number, starting from 0. Defaults to 0.
+            size (int, optional): Number of items per page. Defaults to 10.
+            sort (str, optional): Sort field (e.g., name, companyName, thingName, machineTypeDefinitionName,
+                lastConnection). Defaults to "name".
+            order (str, optional): Sort order (asc or desc). Defaults to "asc".
+            filter (str, optional): Filter criteria (e.g., __archived:false). Defaults to "__archived:false".
 
         Returns:
             dict[str, Any]: List of machines.
@@ -173,11 +179,11 @@ class EurogardAPI:
 
         Args:
             machine_uuid (str): Machine UUID.
-            page (int): Page number, starting from 0.
-            size (int): Number of items per page.
-            sort (str): Sort field (e.g., updatedAt).
-            order (str): Sort order (asc or desc).
-            filter (str): Filter criteria (e.g., __archived:false).
+            page (int, optional): Page number, starting from 0. Defaults to 0.
+            size (int, optional): Number of items per page. Defaults to 10.
+            sort (str, optional): Sort field (e.g., updatedAt). Defaults to "updatedAt".
+            order (str, optional): Sort order (asc or desc). Defaults to "desc".
+            filter (str, optional): Filter criteria (e.g., __archived:false). Defaults to "__archived:false".
 
         Returns:
             dict[str, Any]: Machine measurements.
@@ -217,11 +223,11 @@ class EurogardAPI:
 
         Args:
             machine_uuid (str): Machine UUID.
-            page (int): Page number, starting from 0.
-            size (int): Number of items per page.
-            sort (str): Sort field (e.g., updatedAt).
-            order (str): Sort order (asc or desc).
-            filter (str): Filter criteria (e.g., __archived:false).
+            page (int, optional): Page number, starting from 0. Defaults to 0.
+            size (int, optional): Number of items per page. Defaults to 10.
+            sort (str, optional): Sort field (e.g., updatedAt). Defaults to "updatedAt".
+            order (str, optional): Sort order (asc or desc). Defaults to "desc".
+            filter (str, optional): Filter criteria (e.g., __archived:false). Defaults to "__archived:false".
 
         Returns:
             dict[str, Any]: Machine setpoints.
@@ -370,7 +376,7 @@ class EurogardAPI:
             end (TsInput): End timestamp.
             interval (IntInput): Time interval in which the sensor data is returned (equi distant).
             max_frame_length (IntInput): Maximum interval length for a single API request.
-            show_progress (bool): Whether to show progress.
+            show_progress (bool, optional): Whether to show progress. Defaults to False.
 
         Returns:
             pd.DataFrame: Long DataFrame of historical data.
@@ -420,8 +426,8 @@ class EurogardAPI:
             start (TsInput): Start timestamp.
             end (TsInput): End timestamp.
             interval (IntInput): Interval.
-            timeout (int): Timeout in seconds.
-            max_recursion (int): Maximum recursion depth.
+            timeout (int, optional): Timeout in seconds. Defaults to 15.
+            max_recursion (int, optional): Maximum recursion depth. Defaults to 10.
 
         Returns:
             pd.DataFrame: DataFrame of historical data.
