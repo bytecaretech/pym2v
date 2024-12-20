@@ -14,7 +14,7 @@ from tqdm.auto import tqdm
 from .constants import TOKEN_ROUTE
 from .settings import SETTINGS, Settings
 from .types import IntInput, TsInput
-from .utils import batch_interval, log_retry_attempt
+from .utils import __log_retry_attempt, batch_interval
 
 _limit = asyncio.Semaphore(5)
 
@@ -289,7 +289,7 @@ class EurogardAPI:
     @retry(
         stop=stop_after_attempt(5),
         wait=wait_exponential_jitter(max=10, jitter=3),
-        before=log_retry_attempt,
+        before=__log_retry_attempt,
     )
     def get_historical_data(
         self,

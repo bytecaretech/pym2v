@@ -1,3 +1,5 @@
+"""Type definitions for the pym2v package."""
+
 from datetime import date, datetime, timedelta
 
 import numpy as np
