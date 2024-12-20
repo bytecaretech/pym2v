@@ -25,6 +25,7 @@ dev-dependencies = [
     "pytest>=8.3.3",
     "pre-commit>=4.0.1",
     "nbconvert>=7.16.4",
+    "pytest-mock>=3.14.0",
 ]
 
 [tool.ruff]
