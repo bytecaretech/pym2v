@@ -20,9 +20,9 @@ def api():
     settings = Settings(
         base_url=TEST_URL,
         client_id="client_id",
-        client_secret="client_secret",
+        client_secret="client_secret",  # noqa: S106
         username="username",
-        password="password",
+        password="password",  # noqa: S106
     )
     with patch("requests_oauthlib.oauth2_session.OAuth2Session.fetch_token"):
         api = EurogardAPI(settings)
@@ -162,11 +162,11 @@ def test_get_frame_from_names(api):
         end = datetime.now()
         interval = "1h"
 
-        df = api.get_frame_from_names(
+        names = api.get_frame_from_names(
             machine_uuid="1234", names=["name1", "name2"], start=start, end=end, interval=interval
         )
 
-        assert isinstance(df, pd.DataFrame)
-        assert "name1" in df.columns
-        assert "name2" in df.columns
+        assert isinstance(names, pd.DataFrame)
+        assert "name1" in names.columns
+        assert "name2" in names.columns
         mock_get_historical_data.assert_called_once()
