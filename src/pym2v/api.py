@@ -247,50 +247,7 @@ class EurogardAPI:
 
         return response.json()
 
-    def send_machine_setpoint(
-        self,
-        data_definition_key_item_uuid: str,
-        machine_uuid: str,
-        set_point_value: str,
-        timestamp: int,
-    ) -> dict[str, Any]:
-        """
-        Send a setpoint to a specific machine.
-
-        Args:
-            data_definition_key_item_uuid (str): Data definition key item UUID.
-            machine_uuid (str): Machine UUID.
-            set_point_value (str): Setpoint value.
-            timestamp (int): Timestamp in milliseconds.
-
-        Returns:
-            dict[str, Any]: Response from the server.
-
-        Example:
-            >>> api = EurogardAPI()
-            >>> response = api.send_machine_setpoint("key-item-uuid", "machine-uuid", "value", 1622547800)
-            >>> print(response)
-        """
-        data = {
-            "dataDefinitionKeyItemUuid": data_definition_key_item_uuid,
-            "machineUuid": machine_uuid,
-            "setPointValue": set_point_value,
-            "timestamp": timestamp,
-        }
-
-        response = self._session.post(
-            f"{self._settings.base_url}/backend/data-definition-key-item-controller/set-point",
-            json=data,
-        )
-        response.raise_for_status()
-
-        return response.json()
-
-    @retry(
-        stop=stop_after_attempt(5),
-        wait=wait_exponential_jitter(max=10, jitter=3),
-        before=_log_retry_attempt,
-    )
+    @retry(stop=stop_after_attempt(5), wait=wait_exponential_jitter(max=10, jitter=3), before=_log_retry_attempt)
     def get_historical_data(
         self,
         machine_uuid: str,

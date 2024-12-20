@@ -96,31 +96,6 @@ def test_get_machine_setpoints(api):
         )
 
 
-def test_send_machine_setpoint(api):
-    with patch.object(api._session, "post") as mock_post:
-        mock_response = Mock(spec=Response)
-        mock_response.json.return_value = {"status": "success"}
-        mock_post.return_value = mock_response
-
-        machine_uuid = "1234"
-        response = api.send_machine_setpoint(
-            data_definition_key_item_uuid="key123",
-            machine_uuid=machine_uuid,
-            set_point_value="value",
-            timestamp=1234567890,
-        )
-        assert response == {"status": "success"}
-        mock_post.assert_called_once_with(
-            f"{TEST_URL}/backend/data-definition-key-item-controller/set-point",
-            json={
-                "dataDefinitionKeyItemUuid": "key123",
-                "machineUuid": machine_uuid,
-                "setPointValue": "value",
-                "timestamp": 1234567890,
-            },
-        )
-
-
 def test_get_historical_data(api):
     with patch.object(api._session, "post") as mock_post:
         mock_response = Mock(spec=Response)
