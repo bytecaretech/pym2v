@@ -411,8 +411,8 @@ class EurogardAPI:
             names (list[str]): List of data definition key item names.
             start (TsInput): Start timestamp.
             end (TsInput): End timestamp.
-            interval (IntInput): Interval.
-            max_frame_length (IntInput): Maximum frame length.
+            interval (IntInput): Time interval in which the sensor data is returned (equi distant).
+            max_frame_length (IntInput): Maximum interval length for a single API request.
             show_progress (bool): Whether to show progress.
 
         Returns:
@@ -421,7 +421,7 @@ class EurogardAPI:
         Example:
             >>> api = EurogardAPI()
             >>> df = api.get_long_frame_from_names(
-            ...     "machine-uuid", ["item1", "item2"], "2021-06-01", "2021-06-02", "1H", 1000
+            ...     "machine-uuid", ["item1", "item2"], "2021-06-01", "2021-06-02", "1H", "30D"
             ... )
             >>> print(df)
         """
