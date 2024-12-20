@@ -39,7 +39,6 @@ class EurogardAPI:
 
         Returns:
             OAuth2Session: An authenticated OAuth2 session.
-
         """
         extras: dict[str, Any] = {
             "client_id": self._settings.client_id,
@@ -74,7 +73,6 @@ class EurogardAPI:
             >>> api = EurogardAPI()
             >>> user_info = api.get_user_info()
             >>> print(user_info)
-
         """
         response = self._session.get(
             f"{self._settings.base_url}/backend/user-controller/meGUI",
@@ -93,11 +91,11 @@ class EurogardAPI:
         Retrieve a list of routers.
 
         Args:
-            page (int): Page number.
+            page (int): Page number, starting from 0.
             size (int): Number of items per page.
-            sort (str): Sort field.
-            order (str): Sort order.
-            filter (str): Filter criteria.
+            sort (str): Sort field (e.g., name, companyName, online, locationName).
+            order (str): Sort order (asc or desc).
+            filter (str): Filter criteria (e.g., __archived:false).
 
         Returns:
             dict[str, Any]: List of routers.
@@ -106,7 +104,6 @@ class EurogardAPI:
             >>> api = EurogardAPI()
             >>> routers = api.get_routers()
             >>> print(routers)
-
         """
         params = {
             "page": page,
@@ -135,11 +132,11 @@ class EurogardAPI:
         Retrieve a list of machines.
 
         Args:
-            page (int): Page number.
+            page (int): Page number, starting from 0.
             size (int): Number of items per page.
-            sort (str): Sort field.
-            order (str): Sort order.
-            filter (str): Filter criteria.
+            sort (str): Sort field (e.g., name, companyName, thingName, machineTypeDefinitionName, lastConnection).
+            order (str): Sort order (asc or desc).
+            filter (str): Filter criteria (e.g., __archived:false).
 
         Returns:
             dict[str, Any]: List of machines.
@@ -148,7 +145,6 @@ class EurogardAPI:
             >>> api = EurogardAPI()
             >>> machines = api.get_machines()
             >>> print(machines)
-
         """
         params = {
             "page": page,
@@ -177,11 +173,11 @@ class EurogardAPI:
 
         Args:
             machine_uuid (str): Machine UUID.
-            page (int): Page number.
+            page (int): Page number, starting from 0.
             size (int): Number of items per page.
-            sort (str): Sort field.
-            order (str): Sort order.
-            filter (str): Filter criteria.
+            sort (str): Sort field (e.g., updatedAt).
+            order (str): Sort order (asc or desc).
+            filter (str): Filter criteria (e.g., __archived:false).
 
         Returns:
             dict[str, Any]: Machine measurements.
@@ -190,7 +186,6 @@ class EurogardAPI:
             >>> api = EurogardAPI()
             >>> measurements = api.get_machine_measurements("machine-uuid")
             >>> print(measurements)
-
         """
         params = {
             "page": page,
@@ -222,11 +217,11 @@ class EurogardAPI:
 
         Args:
             machine_uuid (str): Machine UUID.
-            page (int): Page number.
+            page (int): Page number, starting from 0.
             size (int): Number of items per page.
-            sort (str): Sort field.
-            order (str): Sort order.
-            filter (str): Filter criteria.
+            sort (str): Sort field (e.g., updatedAt).
+            order (str): Sort order (asc or desc).
+            filter (str): Filter criteria (e.g., __archived:false).
 
         Returns:
             dict[str, Any]: Machine setpoints.
@@ -235,7 +230,6 @@ class EurogardAPI:
             >>> api = EurogardAPI()
             >>> setpoints = api.get_machine_setpoints("machine-uuid")
             >>> print(setpoints)
-
         """
         params = {
             "page": page,
@@ -267,7 +261,7 @@ class EurogardAPI:
             data_definition_key_item_uuid (str): Data definition key item UUID.
             machine_uuid (str): Machine UUID.
             set_point_value (str): Setpoint value.
-            timestamp (int): Timestamp.
+            timestamp (int): Timestamp in milliseconds.
 
         Returns:
             dict[str, Any]: Response from the server.
@@ -276,7 +270,6 @@ class EurogardAPI:
             >>> api = EurogardAPI()
             >>> response = api.send_machine_setpoint("key-item-uuid", "machine-uuid", "value", 1622547800)
             >>> print(response)
-
         """
         data = {
             "dataDefinitionKeyItemUuid": data_definition_key_item_uuid,
@@ -312,8 +305,8 @@ class EurogardAPI:
         Args:
             machine_uuid (str): Machine UUID.
             data_definition_key_item_names (list[str]): List of data definition key item names.
-            start (int): Start timestamp.
-            end (int): End timestamp.
+            start (int): Start timestamp in milliseconds.
+            end (int): End timestamp in milliseconds.
             interval_in_s (int): Interval in seconds.
 
         Returns:
@@ -323,7 +316,6 @@ class EurogardAPI:
             >>> api = EurogardAPI()
             >>> data = api.get_historical_data("machine-uuid", ["item1", "item2"], 1622547800, 1622634200, 60)
             >>> print(data)
-
         """
         data = {
             "condition": "",
@@ -374,7 +366,6 @@ class EurogardAPI:
             >>> api = EurogardAPI()
             >>> df = api.get_frame_from_names("machine-uuid", ["item1", "item2"], "2021-06-01", "2021-06-02", "1H")
             >>> print(df)
-
         """
         ts_start = pd.Timestamp(start)
         ts_end = pd.Timestamp(end)
@@ -433,7 +424,6 @@ class EurogardAPI:
             ...     "machine-uuid", ["item1", "item2"], "2021-06-01", "2021-06-02", "1H", 1000
             ... )
             >>> print(df)
-
         """
         batches = list(batch_interval(start, end, max_frame_length))
         if show_progress:
@@ -485,7 +475,6 @@ class EurogardAPI:
             ...     "machine-uuid", ["item1", "item2"], "2021-06-01", "2021-06-02", "1H"
             ... )
             >>> print(df)
-
         """
         ts_start = pd.Timestamp(start)
         ts_end = pd.Timestamp(end)
