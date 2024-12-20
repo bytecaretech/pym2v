@@ -298,11 +298,10 @@ class EurogardAPI:
         response.raise_for_status()
         try:
             result = response.json()
+            return result
         except JSONDecodeError:
             logger.error(f"Error decoding JSON: {response.text}")
             raise
-
-        return result
 
     def get_frame_from_names(
         self,
