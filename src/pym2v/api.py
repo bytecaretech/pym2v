@@ -1,3 +1,5 @@
+"""An API client for interacting with the Eurogard backend services."""
+
 import asyncio
 from json import JSONDecodeError
 from typing import Any
@@ -7,7 +9,7 @@ from loguru import logger
 from oauthlib.oauth2 import LegacyApplicationClient
 from requests_oauthlib import OAuth2Session
 from tenacity import retry, stop_after_attempt, wait_exponential_jitter
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 from .constants import TOKEN_ROUTE
 from .settings import SETTINGS, Settings
@@ -18,12 +20,27 @@ _limit = asyncio.Semaphore(5)
 
 
 class EurogardAPI:
+    """Pythonic interface to interact with the Eurogard backend services."""
+
     def __init__(self, settings: Settings = SETTINGS):
+        """
+        Initialize the EurogardAPI instance.
+
+        Args:
+            settings (Settings): Configuration settings for the API client.
+        """
         self._settings = settings
         self._token_url = settings.base_url + TOKEN_ROUTE
         self._session = self.create_session()
 
     def create_session(self) -> OAuth2Session:
+        """
+        Create an OAuth2 session for API communication.
+
+        Returns:
+            OAuth2Session: An authenticated OAuth2 session.
+
+        """
         extras: dict[str, Any] = {
             "client_id": self._settings.client_id,
             "client_secret": self._settings.client_secret,
@@ -47,14 +64,50 @@ class EurogardAPI:
         return oauth
 
     def get_user_info(self) -> dict[str, Any]:
+        """
+        Retrieve user information.
+
+        Returns:
+            dict[str, Any]: User information.
+
+        Example:
+            >>> api = EurogardAPI()
+            >>> user_info = api.get_user_info()
+            >>> print(user_info)
+
+        """
         response = self._session.get(
             f"{self._settings.base_url}/backend/user-controller/meGUI",
         )
         return response.json()
 
     def get_routers(
-        self, page: int = 0, size: int = 10, sort: str = "name", order: str = "asc", filter: str = "__archived:false"
+        self,
+        page: int = 0,
+        size: int = 10,
+        sort: str = "name",
+        order: str = "asc",
+        filter: str = "__archived:false",
     ) -> dict[str, Any]:
+        """
+        Retrieve a list of routers.
+
+        Args:
+            page (int): Page number.
+            size (int): Number of items per page.
+            sort (str): Sort field.
+            order (str): Sort order.
+            filter (str): Filter criteria.
+
+        Returns:
+            dict[str, Any]: List of routers.
+
+        Example:
+            >>> api = EurogardAPI()
+            >>> routers = api.get_routers()
+            >>> print(routers)
+
+        """
         params = {
             "page": page,
             "size": size,
@@ -71,8 +124,32 @@ class EurogardAPI:
         return response.json()
 
     def get_machines(
-        self, page: int = 0, size: int = 10, sort: str = "name", order: str = "asc", filter: str = "__archived:false"
+        self,
+        page: int = 0,
+        size: int = 10,
+        sort: str = "name",
+        order: str = "asc",
+        filter: str = "__archived:false",
     ) -> dict[str, Any]:
+        """
+        Retrieve a list of machines.
+
+        Args:
+            page (int): Page number.
+            size (int): Number of items per page.
+            sort (str): Sort field.
+            order (str): Sort order.
+            filter (str): Filter criteria.
+
+        Returns:
+            dict[str, Any]: List of machines.
+
+        Example:
+            >>> api = EurogardAPI()
+            >>> machines = api.get_machines()
+            >>> print(machines)
+
+        """
         params = {
             "page": page,
             "size": size,
@@ -95,7 +172,33 @@ class EurogardAPI:
         order: str = "desc",
         filter: str = "__archived:false",
     ) -> dict[str, Any]:
-        params = {"page": page, "size": size, "sort": sort, "order": order, "filter": filter}
+        """
+        Retrieve measurements for a specific machine.
+
+        Args:
+            machine_uuid (str): Machine UUID.
+            page (int): Page number.
+            size (int): Number of items per page.
+            sort (str): Sort field.
+            order (str): Sort order.
+            filter (str): Filter criteria.
+
+        Returns:
+            dict[str, Any]: Machine measurements.
+
+        Example:
+            >>> api = EurogardAPI()
+            >>> measurements = api.get_machine_measurements("machine-uuid")
+            >>> print(measurements)
+
+        """
+        params = {
+            "page": page,
+            "size": size,
+            "sort": sort,
+            "order": order,
+            "filter": filter,
+        }
 
         response = self._session.get(
             f"{self._settings.base_url}/backend/machine-controller/{machine_uuid}/measurements",
@@ -114,6 +217,26 @@ class EurogardAPI:
         order: str = "desc",
         filter: str = "__archived:false",
     ) -> dict[str, Any]:
+        """
+        Retrieve setpoints for a specific machine.
+
+        Args:
+            machine_uuid (str): Machine UUID.
+            page (int): Page number.
+            size (int): Number of items per page.
+            sort (str): Sort field.
+            order (str): Sort order.
+            filter (str): Filter criteria.
+
+        Returns:
+            dict[str, Any]: Machine setpoints.
+
+        Example:
+            >>> api = EurogardAPI()
+            >>> setpoints = api.get_machine_setpoints("machine-uuid")
+            >>> print(setpoints)
+
+        """
         params = {
             "page": page,
             "size": size,
@@ -131,8 +254,30 @@ class EurogardAPI:
         return response.json()
 
     def send_machine_setpoint(
-        self, data_definition_key_item_uuid: str, machine_uuid: str, set_point_value: str, timestamp: int
+        self,
+        data_definition_key_item_uuid: str,
+        machine_uuid: str,
+        set_point_value: str,
+        timestamp: int,
     ) -> dict[str, Any]:
+        """
+        Send a setpoint to a specific machine.
+
+        Args:
+            data_definition_key_item_uuid (str): Data definition key item UUID.
+            machine_uuid (str): Machine UUID.
+            set_point_value (str): Setpoint value.
+            timestamp (int): Timestamp.
+
+        Returns:
+            dict[str, Any]: Response from the server.
+
+        Example:
+            >>> api = EurogardAPI()
+            >>> response = api.send_machine_setpoint("key-item-uuid", "machine-uuid", "value", 1622547800)
+            >>> print(response)
+
+        """
         data = {
             "dataDefinitionKeyItemUuid": data_definition_key_item_uuid,
             "machineUuid": machine_uuid,
@@ -148,10 +293,38 @@ class EurogardAPI:
 
         return response.json()
 
-    @retry(stop=stop_after_attempt(5), wait=wait_exponential_jitter(max=10, jitter=3), before=log_retry_attempt)
+    @retry(
+        stop=stop_after_attempt(5),
+        wait=wait_exponential_jitter(max=10, jitter=3),
+        before=log_retry_attempt,
+    )
     def get_historical_data(
-        self, machine_uuid: str, data_definition_key_item_names: list[str], start: int, end: int, interval_in_s: int
+        self,
+        machine_uuid: str,
+        data_definition_key_item_names: list[str],
+        start: int,
+        end: int,
+        interval_in_s: int,
     ) -> dict[str, Any]:
+        """
+        Retrieve historical data for a specific machine.
+
+        Args:
+            machine_uuid (str): Machine UUID.
+            data_definition_key_item_names (list[str]): List of data definition key item names.
+            start (int): Start timestamp.
+            end (int): End timestamp.
+            interval_in_s (int): Interval in seconds.
+
+        Returns:
+            dict[str, Any]: Historical data.
+
+        Example:
+            >>> api = EurogardAPI()
+            >>> data = api.get_historical_data("machine-uuid", ["item1", "item2"], 1622547800, 1622634200, 60)
+            >>> print(data)
+
+        """
         data = {
             "condition": "",
             "values": data_definition_key_item_names,
@@ -177,8 +350,32 @@ class EurogardAPI:
         return result
 
     def get_frame_from_names(
-        self, machine_uuid: str, names: list[str], start: TsInput, end: TsInput, interval: IntInput
+        self,
+        machine_uuid: str,
+        names: list[str],
+        start: TsInput,
+        end: TsInput,
+        interval: IntInput,
     ) -> pd.DataFrame:
+        """
+        Retrieve a DataFrame of historical data for a specific machine.
+
+        Args:
+            machine_uuid (str): Machine UUID.
+            names (list[str]): List of data definition key item names.
+            start (TsInput): Start timestamp.
+            end (TsInput): End timestamp.
+            interval (IntInput): Interval.
+
+        Returns:
+            pd.DataFrame: DataFrame of historical data.
+
+        Example:
+            >>> api = EurogardAPI()
+            >>> df = api.get_frame_from_names("machine-uuid", ["item1", "item2"], "2021-06-01", "2021-06-02", "1H")
+            >>> print(df)
+
+        """
         ts_start = pd.Timestamp(start)
         ts_end = pd.Timestamp(end)
         int_interval = pd.Timedelta(interval)
@@ -199,11 +396,11 @@ class EurogardAPI:
 
         if all(d.empty for d in dfs.values()):
             logger.warning(f"No data found for {names=} in the interval {start=} -> {end=}")
-            df = pd.DataFrame()
+            df_result = pd.DataFrame()
         else:
-            df = pd.concat(dfs, axis="columns")
+            df_result = pd.concat(dfs, axis="columns")
 
-        return df
+        return df_result
 
     def get_long_frame_from_names(
         self,
@@ -215,6 +412,29 @@ class EurogardAPI:
         max_frame_length: IntInput,
         show_progress: bool = False,
     ) -> pd.DataFrame:
+        """
+        Retrieve a long DataFrame of historical data for a specific machine.
+
+        Args:
+            machine_uuid (str): Machine UUID.
+            names (list[str]): List of data definition key item names.
+            start (TsInput): Start timestamp.
+            end (TsInput): End timestamp.
+            interval (IntInput): Interval.
+            max_frame_length (IntInput): Maximum frame length.
+            show_progress (bool): Whether to show progress.
+
+        Returns:
+            pd.DataFrame: Long DataFrame of historical data.
+
+        Example:
+            >>> api = EurogardAPI()
+            >>> df = api.get_long_frame_from_names(
+            ...     "machine-uuid", ["item1", "item2"], "2021-06-01", "2021-06-02", "1H", 1000
+            ... )
+            >>> print(df)
+
+        """
         batches = list(batch_interval(start, end, max_frame_length))
         if show_progress:
             batches = tqdm(batches)
@@ -222,13 +442,17 @@ class EurogardAPI:
 
         for left, right in tqdm(batches):
             data = self.get_frame_from_names(
-                machine_uuid=machine_uuid, names=names, start=left, end=right, interval=interval
+                machine_uuid=machine_uuid,
+                names=names,
+                start=left,
+                end=right,
+                interval=interval,
             )
             if not data.empty:
                 dfs.append(data)
 
-        df = pd.concat(dfs)
-        return df
+        df_result = pd.concat(dfs)
+        return df_result
 
     async def asmart_get_frame_from_names(
         self,
@@ -240,6 +464,29 @@ class EurogardAPI:
         timeout: int = 15,
         max_recursion: int = 10,
     ) -> pd.DataFrame:
+        """
+        Asynchronously retrieve a DataFrame of historical data for a specific machine.
+
+        Args:
+            machine_uuid (str): Machine UUID.
+            names (list[str]): List of data definition key item names.
+            start (TsInput): Start timestamp.
+            end (TsInput): End timestamp.
+            interval (IntInput): Interval.
+            timeout (int): Timeout in seconds.
+            max_recursion (int): Maximum recursion depth.
+
+        Returns:
+            pd.DataFrame: DataFrame of historical data.
+
+        Example:
+            >>> api = EurogardAPI()
+            >>> df = await api.asmart_get_frame_from_names(
+            ...     "machine-uuid", ["item1", "item2"], "2021-06-01", "2021-06-02", "1H"
+            ... )
+            >>> print(df)
+
+        """
         ts_start = pd.Timestamp(start)
         ts_end = pd.Timestamp(end)
         int_interval = pd.Timedelta(interval)
@@ -259,12 +506,12 @@ class EurogardAPI:
                 int_interval,
             )
             async with _limit:
-                df = await asyncio.wait_for(task, timeout=timeout)
+                df_result = await asyncio.wait_for(task, timeout=timeout)
 
         except asyncio.TimeoutError:
             logger.info(f"Request took more than {timeout=}s -> splitting the interval")
             if max_recursion == 0:
-                raise RecursionError("Max recursion depth reached")
+                raise RecursionError("Max recursion depth reached") from asyncio.TimeoutError
 
             mid = ts_start + (ts_end - ts_start) / 2
             # Round mid down to full minutes
@@ -274,13 +521,25 @@ class EurogardAPI:
 
             frames = await asyncio.gather(
                 self.asmart_get_frame_from_names(
-                    machine_uuid, names, ts_start, mid, int_interval, timeout, max_recursion - 1
+                    machine_uuid,
+                    names,
+                    ts_start,
+                    mid,
+                    int_interval,
+                    timeout,
+                    max_recursion - 1,
                 ),
                 self.asmart_get_frame_from_names(
-                    machine_uuid, names, mid, ts_end, int_interval, timeout, max_recursion - 1
+                    machine_uuid,
+                    names,
+                    mid,
+                    ts_end,
+                    int_interval,
+                    timeout,
+                    max_recursion - 1,
                 ),
             )
 
-            df = pd.concat(frames, axis="index")
+            df_result = pd.concat(frames, axis="index")
 
-        return df
+        return df_result
