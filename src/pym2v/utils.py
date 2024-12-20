@@ -12,7 +12,7 @@ from tenacity import RetryCallState
 from .types import IntInput, TsInput
 
 
-def __log_retry_attempt(retry_state: RetryCallState):
+def _log_retry_attempt(retry_state: RetryCallState):
     """Log retry attempts.
 
     Args:
