@@ -1,99 +1,114 @@
 # pym2v
-Python wrapper for Eurogard m2v IoT platform
+
+Python wrapper for the [Eurogard m2v][1] IoT platform.
 
 ## Prerequisites
-Before working on this project, ensure you have the following installed:
-- [uv](https://uv.link/installation) for managing virtual environments.
+
+- Python 3.12+
+- Programmatic access to Eurogard API
 
 ## Installation
-To install pym2v, use pip:
-```bash
-git clone https://github.com/bytecaretech/pym2v.git
-cd pym2v
-pip install .
-```
+
+py2mv is available as a Python package and can be installed via pip or [uv][2].
+
+### Via pip
+
+1. Create a virtual environment: `python3 -m venv .venv`
+1. Activate the virtual environment: `source .venv/bin/active`
+1. Install pym2v via pip: `pip install https://github.com/bytecaretech/pym2v.git`
+
+### Via uv
+
+1. Install pym2v via uv: `uv add https://github.com/bytecaretech/pym2v.git`
 
 ## Usage
-Here is a basic example of how to use pym2v:
-```python
-import pandas as pd
-from loguru import logger
 
+Import the `EuroGardAPI` object and create an instance of it
+
+```python
 from pym2v.api import EurogardAPI
 
-logger.add("notebook.log")
 
 api = EurogardAPI()
+```
 
-machine_uuid = str(api.get_machines()["entities"][0]["uuid"])
-result = api.get_machine_measurements(machine_uuid, page=5)
-measures = pd.DataFrame.from_dict(result["entities"])
+Retrieve a list of machines
 
-data = api.get_long_frame_from_names(
+```python
+machines = api.get_machines()
+```
+
+Get the UUID of the machine your are interested in
+
+```python
+MACHINE_NAME = "1337Machine"
+
+machine_uuid = [m["uuid"]for m in machines["entities"] if m["name"] == MACHINE_NAME][0]
+```
+
+Get the names of measurements for which you like to pull data
+
+```python
+result = api.get_machine_measurements(machine_uuid)
+```
+
+Turn the data returned by the API into a DataFrame for easier handling
+
+```python
+measurements_df = pd.DataFrame.from_dict(result["entities"])
+```
+
+Get actual data
+
+```python
+START_DATE = "2025-01-01"
+END_DATE = "2025-01-13"
+INTERVAL = "60s"
+MAX_FRAME_LENGTH = "30D"
+
+data_df = api.get_long_frame_from_names(
     machine_uuid=machine_uuid,
-    names=measures["name"].to_list()[:3],
-    start="2024-01-01",
-    end="2025-01-01",
-    interval="60s",
-    max_frame_length="30D",
+    names=measurements_df.name.to_list(),
+    start=START_DATE,
+    end=END_DATE,
+    interval=INTERVAL,
+    max_frame_length=MAX_FRAME_LENGTH,
 )
-
-data.info()
-print(f"Completeness: {len(data.index) / len(pd.date_range(data.index[0], data.index[-1], freq='60s')):.3%}")
-print(f"Duplicates: {data.index.duplicated().sum()}")
 ```
 
 ## Authentication
-To authenticate with the Eurogard API, you need to provide your credentials. You can do this either by setting environment variables or by configuring the `Settings` object directly.
 
-### Using Environment Variables
-Create a `.env` file in the root of your project and add the following lines, replacing the placeholder values with your actual credentials:
+To authenticate with the Eurogard API, you need to provide the following credentials:
 
-```bash
-# filepath: ./.env
-# Eurogard API configuration
-EUROGARD_BASE_URL=https://eurogard.cloud
+- Username
+- Password
+- Client ID
+- Client Secret
+
+You can do this either by using an `.env` file (recommended) or by setting environment variables directly.
+
+### Using an .env file
+
+Rename the `.env.example` at the root of the project to `.env`, and replace the placeholder values with your actual credentials.
+
+```
 EUROGARD_USERNAME=your_username_here
 EUROGARD_PASSWORD=your_password_here
 EUROGARD_CLIENT_ID=your_client_id_here
 EUROGARD_CLIENT_SECRET=your_client_secret_here
 ```
 
-### Using the Settings Object
-Alternatively, you can configure the `Settings` object directly in your code:
+## Contributing
 
-```python
-from pym2v.settings import Settings
+1. Install uv
+1. Install project dependencies: `uv sync`
+1. Install pre-commit hooks: `uv run pre-commit install`
+1. Create a dedicated development branch: `git checkout -b <hyphen-delimited-branch-name>`
+1. Add your changes
+1. Run linters: `uv run pre-commit run --all-files`
+1. Run tests: `uv run pytest`
+1. Commit changes and open a pull request
 
-settings = Settings(
-    base_url="https://eurogard.cloud",
-    username="your_username_here",
-    password="your_password_here",
-    client_id="your_client_id_here",
-    client_secret="your_client_secret_here"
-)
-```
 
-### Default Behavior
-If you do not provide settings explicitly, the `EurogardAPI` will attempt to load settings from environment variables or a `.env` file. See `.env.sample` for example env vars.
-
-## Setting Up the Project for Development
-To set up the project for development, follow these steps:
-
-1. Clone the repository:
-```bash
-git clone https://github.com/bytecaretech/pym2v.git
-cd pym2v
-```
-
-2. Sync the environment (a `.venv` will be created if none exists):
-```bash
-uv sync
-```
-
-3. Install pre-commit hooks:
-```bash
-pre-commit install
-```
-
-Now you are ready to start developing pym2v!
+[1]: https://eurogard.de/software/m2v/
+[2]: https://docs.astral.sh/uv/
