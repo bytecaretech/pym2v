@@ -1,7 +1,7 @@
 [project]
 name = "pym2v"
 version = "0.1.1"
-description = "Add your description here"
+description = "Python wrapper for Eurogard m2v IoT platform"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -12,10 +12,6 @@ dependencies = [
     "tenacity>=9.0.0",
     "tqdm>=4.67.1",
 ]
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
 
 [tool.uv]
 dev-dependencies = [
@@ -36,9 +32,6 @@ line-length = 120
 docstring-code-format = true
 docstring-code-line-length = "dynamic"
 
-[tool.ruff.pydocstyle]
-convention = "google"
-
 [tool.ruff.lint]
 select = ["B", "E", "D", "F", "I", "S", "PD", "PT", "SIM"]
 ignore = ["D211", "D212"]
@@ -46,3 +39,21 @@ ignore = ["D211", "D212"]
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["D104"]
 "**/{tests}/*" = ["D100", "D103", "S101"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --strict-markers --cov --cov-report=term"
+markers = [
+    "local: marks tests as running locally only (deselect with '-m \"not local\"')"
+]
+xfail_strict = true
+
+[tool.coverage.run]
+branch = true
+source = ["src"]
+
+[tool.coverage.report]
+fail_under = 80
