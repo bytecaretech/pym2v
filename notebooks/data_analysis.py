@@ -1,39 +1,29 @@
+"""
+Initial analysis of aixponic data. 
+To just calculate the metrics of a initial model fit for var 1.9: 
+run with python -m data_analysis. 
+Use Juypter kernel in VSCode to generate plots step by step.
+"""
+
 import os
 import pandas as pd
-import pandera as pa
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from prophet import Prophet
 import logging
-from pandera.typing import Series
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 
 # set up logging
 # TODO: include logging below
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # constants
+logger.info("define constants")
 DATA_PATH_LOCAL: str = "/Users/Vanilleeis/aixponic/aixponic/data_extracts"
 LAST_EXTRACT_DATE: str = "2025_03_14"
 
-TARGETS_4_CASES: dict = {
-    "pump_degeneration": {"UNKNOWN": "5.12"},  # TODO: Where is this parameter located?
-    "noise_induced_flushing": {
-        "DO_Trommelfilter_Spülpumpe_QA4 ": "2.23",
-        "spüldauer_trommelfilter": "3.35",
-        "pause_der_spülung_trommelfilter": "3.36",
-        "MW-Differenz_Sumpf_Becken": "1.4",
-        "MW-LVL-Sumpf": "1.9",
-        "MW-LVL-Becken": "1.1",
-        "trigger_spülung": "3.37",
-    },
-    "tls_main_circuit_pump": {
-        "trockenlaufschutz_sumpf": "3.31",
-        "trockenlaufschutz_becken": "3.32",
-    },
-}
 TARGET_COLS: list = [
     "DO_Trommelfilter_Spülpumpe_QA4",  # 2.23
     "MW-Differenz_Sumpf_Becken",  # 1.4
@@ -41,48 +31,14 @@ TARGET_COLS: list = [
     "MW-LVL-Becken",  # 1.1
 ]
 
-# flush pause
-FLUSH_PAUSE_INTERVAL: dict = {"max_value": 400, "min_value": 20}
-
-# flush duration
-FLUSH_DURATION_INTERVAL: dict = {
-    "max_value": 12,
-    "min_value": 3,
-}  # doc says 4 to 20 sec?
-SETPOINT_3_35: int = 20
-
-# flush trigger
-SETPOINT_3_37: int = 20
-
-# water levels
-SETPOINT_3_31: int = 1015
-SETPOINT_3_32: int = 1087
-
-# rename mapping
-MAPPING_COLUMNS = {
-    "MW-Differenz_Sumpf_Becken": "MW_Differenz_Sumpf_Becken",
-    "MW-LVL-Sumpf": "MW_LVL_Sumpf",
-    "MW-LVL-Becken": "MW_LVL_Becken",
-}
+SAVE_PLOTS: bool = False
 
 SAVE_PATH: str = "/Users/Vanilleeis/aixponic/aixponic/notebooks/figures"
 
-
-# data schema
-class target_schema(pa.DataFrameModel):
-    DO_Trommelfilter_Spülpumpe_QA4: Series[float] = pa.Field(
-        isin=[0, 1], nullable=False
-    )
-    # MW_Differenz_Sumpf_Becken: Series[float] = pa.Field(in_range=[], nullable=False)
-    MW_LVL_Sumpf: Series[float] = pa.Field(
-        in_range={"min_value": 1000, "max_value": 1500}, nullable=False
-    )
-    MW_LVL_Becken: Series[float] = pa.Field(
-        in_range={"min_value": 1000, "max_value": 1500}, nullable=False
-    )
+# functions
+logger.info("define functions")
 
 
-# functions:
 def slice_df(dataframe: pd.DataFrame, cols: list) -> pd.DataFrame:
     """
     Truncate the specified dataframe in a way that the time series starts with non missing
@@ -495,11 +451,13 @@ if __name__ == "__main__":
     ########################################################################
     # read data
     # NOTE: data is not equi-distant, e.g.: 2024-01-26 - 11:51:00
+    logger.info("read data from path")
     raw_data_df = pd.read_parquet(
         f"{DATA_PATH_LOCAL}/{LAST_EXTRACT_DATE}_data_df.parquet"
     )
 
     # extract indices where the first non-NaN value occurs
+    logger.info("process data")
     idx_nonnan_df = raw_data_df.reset_index().apply(lambda x: x.first_valid_index())
 
     # remove all columns that have the highest index
@@ -520,6 +478,7 @@ if __name__ == "__main__":
         for col in sliced_df_sorted.columns
         if col.startswith("DO")
     }
+    logger.info(f"uniq_val_dict: {uniq_val_dict}.")
 
     # extract value ranges for columns starting with MW
     val_ranges = {
@@ -527,12 +486,16 @@ if __name__ == "__main__":
         for col in sliced_df_sorted.columns
         if col.startswith("MW")
     }
+    logger.info(f"val_ranges: {val_ranges}.")
 
     # create plots for SMEs to identify reasons for gaps in the data
-    plot_timeseries_with_nans(df=sliced_df_sorted, save_path=SAVE_PATH)
+    if SAVE_PLOTS:
+        logger.info("save time series plots for sme inspection")
+        plot_timeseries_with_nans(df=sliced_df_sorted, save_path=SAVE_PATH)
 
     # NOTE: Data quality is poor, removing non valuable columns
     # remove all columns where 20% are NaN/ Nulls
+    logger.info("remove NaNs accordig to defined rules of thumb")
     trunc_df = drop_columns_with_missing(sliced_df_sorted, threshold=0.20)
 
     # define meaningfull value ranges for trunc_df.columns.tolist() columns
@@ -568,6 +531,7 @@ if __name__ == "__main__":
     )
 
     # remove all columns that has almost no variance
+    logger.info("remove columns with more than 90% imbalances")
     cleaned_df = drop_highly_imbalanced(df=cleaned_bin_df, threshold=0.9)
 
     cleaned_df.drop(
@@ -589,21 +553,27 @@ if __name__ == "__main__":
     ########################################################################
 
     # feature engineering target
+    logger.info("feature engineering")
     scaled_df = scale_dataframe_by_ranges(cleaned_df, value_ranges=VALUE_RANGES)
 
     # resample on 5 min freq
     # TODO: include in function
+    logger.info("resampling and forefilling gaps in data")
     resamp_df = scaled_df.resample("5T").first()
     resamp_filled_df = resamp_df.fillna(method="ffill")
 
     # lag features by t-3 (15 min.)
+    logger.info("lag features")
     lagged_df = create_lagged_features(resamp_filled_df, lags=3)
 
     # compute and correlation matrix
-    plot_corr_heatmap(lagged_df)
+    if SAVE_PLOTS:
+        logger.info("create corr matrix")
+        plot_corr_heatmap(lagged_df)
 
     # resample data and removed non lagged features
     # NOTE: target is MW-LVL-Sumpf (1.9)
+    logger.info("drop features to avoid data leakage")
     lagged_df.drop(
         columns=[
             "MW-Drehzahl_Hauptkreislaufpumpe",
@@ -631,25 +601,30 @@ if __name__ == "__main__":
     # fit simple model on data and evaluate performance metrics
     ########################################################################
     # create ds and y columns for prophet
+    logger.info("prepare data for ts analysis")
     df = lagged_df.reset_index().rename(
         columns={"timestamp": "ds", "MW-LVL-Sumpf": "y"}
     )
     regressors = [col for col in df.columns if col not in ["ds", "y"]]
 
     # create model instance
+    logger.info("create model")
     model = Prophet()
     for reg in regressors:
         model.add_regressor(reg)
 
     # simple train test split
+    logger.info("create simple train test split")
     train_size = int(len(df) * 0.8)
     train_df = df.iloc[:train_size]
     test_df = df.iloc[train_size:]
 
     # fit model
+    logger.info("fit model")
     model.fit(train_df)
 
     # evaluate metrics
+    logger.info("create fcsts")
     future = test_df[["ds"] + regressors]
     forecasts = model.predict(future)
 
@@ -657,29 +632,32 @@ if __name__ == "__main__":
     mae = mean_absolute_error(test_df["y"], forecasts["yhat"])
 
     # plot y vs. y_hat
-    plot_predictions(test_df, forecasts, target_col="y")
-    plot_predictions(test_df.iloc[29600:,], forecasts.iloc[29600:,], target_col="y")
-
-    print(f"MSE: {mse:.6f}, MAE: {mae:.2f}")
+    if SAVE_PLOTS:
+        logger.info("plot fcsts")
+        plot_predictions(test_df, forecasts, target_col="y")
+        plot_predictions(test_df.iloc[29600:,], forecasts.iloc[29600:,], target_col="y")
+    logger.info(f"MSE: {mse:.6f}, MAE: {mae:.2f}")
 
     # plot of re-scaled vars
-    plot_actual_vs_predicted_original(
-        test_df=test_df,
-        forecast=forecasts,
-        target_col="MW-LVL-Sumpf",
-        value_ranges=VALUE_RANGES,
-    )
+    if SAVE_PLOTS:
+        logger.info("create fcsts with org. values")
 
-    plot_actual_vs_predicted_original(
-        test_df=test_df.iloc[29400:,],
-        forecast=forecasts.iloc[29400:,],
-        target_col="MW-LVL-Sumpf",
-        value_ranges=VALUE_RANGES,
-    )
+        plot_actual_vs_predicted_original(
+            test_df=test_df,
+            forecast=forecasts,
+            target_col="MW-LVL-Sumpf",
+            value_ranges=VALUE_RANGES,
+        )
 
-    # 
+        plot_actual_vs_predicted_original(
+            test_df=test_df.iloc[29400:,],
+            forecast=forecasts.iloc[29400:,],
+            target_col="MW-LVL-Sumpf",
+            value_ranges=VALUE_RANGES,
+        )
+
+    # calculate mse and mae in mm
     min_val, max_val = VALUE_RANGES["MW-LVL-Sumpf"]
-
-    print(
+    logger.info(
         f"MAE in mm: {mean_absolute_error(test_df['y'] * (max_val - min_val) + min_val, forecasts['yhat'] * (max_val - min_val) + min_val):.2f}"
     )
