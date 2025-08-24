@@ -609,7 +609,8 @@ if __name__ == "__main__":
 
     # create model instance
     logger.info("create model")
-    model = Prophet()
+    # NOTE: hyper param tuning can be beneficial
+    model = Prophet(changepoint_prior_scale=0.5, seasonality_prior_scale=10, n_changepoints=50)
     for reg in regressors:
         model.add_regressor(reg)
 
@@ -618,6 +619,8 @@ if __name__ == "__main__":
     train_size = int(len(df) * 0.8)
     train_df = df.iloc[:train_size]
     test_df = df.iloc[train_size:]
+    logger.info(f"max date train_df: {train_df["ds"].max()}")
+    logger.info(f"min date test_df: {test_df["ds"].min()}")
 
     # fit model
     logger.info("fit model")
@@ -635,6 +638,7 @@ if __name__ == "__main__":
     if SAVE_PLOTS:
         logger.info("plot fcsts")
         plot_predictions(test_df, forecasts, target_col="y")
+        # TODO: Improvement use Prophet for trend/seasonality + another ML model (like XGBoost) on the residuals.
         plot_predictions(test_df.iloc[29600:,], forecasts.iloc[29600:,], target_col="y")
     logger.info(f"MSE: {mse:.6f}, MAE: {mae:.2f}")
 
@@ -649,9 +653,10 @@ if __name__ == "__main__":
             value_ranges=VALUE_RANGES,
         )
 
+        # model cannot capture spikes
         plot_actual_vs_predicted_original(
-            test_df=test_df.iloc[29400:,],
-            forecast=forecasts.iloc[29400:,],
+            test_df=test_df.iloc[28000:28300],
+            forecast=forecasts.iloc[28000:28300],
             target_col="MW-LVL-Sumpf",
             value_ranges=VALUE_RANGES,
         )
