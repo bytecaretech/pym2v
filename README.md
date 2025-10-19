@@ -4,26 +4,26 @@
 
 # pym2v
 
-Python wrapper to interact with the [Eurogard m2v][1] IoT platform.
+Python wrapper to inteact with [m2v][1] industrial IoT platform from [Eurogard][2].
 
 ## Prerequisites
 
 - Python 3.12+
-- Programmatic access to Eurogard API
+- Programmatic access to the Eurogard API
 
 ## Installation
 
-py2mv is available as a Python package and can be installed via pip or [uv][2].
+py2mv is available as a Python package and can be installed via pip or [uv][3].
 
 ### Via pip
 
 1. Create a virtual environment: `python3 -m venv .venv`
 1. Activate the virtual environment: `source .venv/bin/active`
-1. Install pym2v via pip: `pip install https://github.com/bytecaretech/pym2v.git`
+1. Install pym2v via pip: `pip install pym2v`
 
 ### Via uv
 
-1. Install pym2v via uv: `uv add https://github.com/bytecaretech/pym2v.git`
+1. Install pym2v via uv: `uv add pym2v`
 
 ## Configuration
 
@@ -108,5 +108,6 @@ data_df = api.get_long_frame_from_names(
 Check out [CONTRIBUTING.md](CONTRIBUTING.md) for further information.
 
 
-[1]: https://eurogard.de/software/m2v/
-[2]: https://docs.astral.sh/uv/
+[1]: https://eurogard.de
+[2]: https://eurogard.de/software/m2v/
+[3]: https://docs.astral.sh/uv/
