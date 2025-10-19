@@ -47,7 +47,7 @@ class EurogardAPI:
         """
         extras: dict[str, Any] = {
             "client_id": self._settings.client_id,
-            "client_secret": self._settings.client_secret,
+            "client_secret": self._settings.client_secret.get_secret_value(),
         }
 
         client = LegacyApplicationClient(client_id=self._settings.client_id)
@@ -61,7 +61,7 @@ class EurogardAPI:
         oauth.fetch_token(
             token_url=self._token_url,
             username=self._settings.username,
-            password=self._settings.password,
+            password=self._settings.password.get_secret_value(),
             **extras,
         )
 
