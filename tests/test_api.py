@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 from requests.models import Response
 
-from tests.conftest import TEST_URL
+TEST_URL = "https://example.com/"
 
 
 def test_get_user_info(api, mocker):

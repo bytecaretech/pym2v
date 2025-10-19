@@ -3,13 +3,11 @@ import pytest
 from pym2v.api import EurogardAPI
 from pym2v.settings import Settings
 
-TEST_URL = "https://example.com/"
-
 
 @pytest.fixture
 def api(mocker):
     settings = Settings(
-        base_url=TEST_URL,
+        base_url="https://example.com/",
         client_id="client_id",
         client_secret="client_secret",  # noqa: S106
         username="username",
