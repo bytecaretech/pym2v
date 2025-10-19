@@ -1,27 +1,21 @@
 [project]
 name = "pym2v"
-version = "0.1.1"
-description = "Python wrapper for Eurogard m2v IoT platform"
+version = "0.1.2"
+description = "Python wrapper to interact with the Eurogard m2v IoT platform"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "loguru>=0.7.3",
     "pandas[excel]>=2.2.3",
+    "pyarrow>=21.0.0",
     "pydantic-settings>=2.6.1",
     "requests-oauthlib>=2.0.0",
     "tenacity>=9.0.0",
     "tqdm>=4.67.1",
 ]
 
-[project.optional-dependencies]
-docs = [
-    "mkdocs-material>=9.6.1",
-    "mkdocs>=1.6.1",
-    "mkdocstrings[python]>=0.27.0",
-]
-
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "ipykernel>=6.29.5",
     "ipywidgets>=8.1.5",
     "pytest-cov>=6.0.0",
@@ -29,6 +23,12 @@ dev-dependencies = [
     "pre-commit>=4.0.1",
     "nbconvert>=7.16.4",
     "pytest-mock>=3.14.0",
+]
+
+docs = [
+    "mkdocs-material>=9.6.1",
+    "mkdocs>=1.6.1",
+    "mkdocstrings[python]>=0.27.0",
 ]
 
 [tool.ruff]
@@ -68,6 +68,3 @@ fail_under = 60
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
-
-[dependency-groups]
-docs = []

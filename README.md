@@ -1,6 +1,10 @@
+![CI](https://github.com/bytecaretech/pym2v/actions/workflows/ci.yml/badge.svg)
+![Docs](https://github.com/bytecaretech/pym2v/actions/workflows/docs.yml/badge.svg)
+
+
 # pym2v
 
-Python wrapper for the [Eurogard m2v][1] IoT platform.
+Python wrapper to interact with the [Eurogard m2v][1] IoT platform.
 
 ## Prerequisites
 
@@ -20,6 +24,29 @@ py2mv is available as a Python package and can be installed via pip or [uv][2].
 ### Via uv
 
 1. Install pym2v via uv: `uv add https://github.com/bytecaretech/pym2v.git`
+
+## Configuration
+
+To authenticate with the Eurogard API, you need to provide the following credentials:
+
+- Username
+- Password
+- Client ID
+- Client Secret
+
+You can do this either by using an `.env` file (recommended) or by setting environment variables directly.
+
+### Using an .env file
+
+Rename the `.env.example` at the root of the project to `.env`, and replace the placeholder values with your actual credentials.
+
+```
+EUROGARD_BASEURL=https://eurogard.cloud
+EUROGARD_USERNAME=your_username_here
+EUROGARD_PASSWORD=your_password_here
+EUROGARD_CLIENT_ID=your_client_id_here
+EUROGARD_CLIENT_SECRET=your_client_secret_here
+```
 
 ## Usage
 
@@ -76,38 +103,9 @@ data_df = api.get_long_frame_from_names(
 )
 ```
 
-## Authentication
-
-To authenticate with the Eurogard API, you need to provide the following credentials:
-
-- Username
-- Password
-- Client ID
-- Client Secret
-
-You can do this either by using an `.env` file (recommended) or by setting environment variables directly.
-
-### Using an .env file
-
-Rename the `.env.example` at the root of the project to `.env`, and replace the placeholder values with your actual credentials.
-
-```
-EUROGARD_USERNAME=your_username_here
-EUROGARD_PASSWORD=your_password_here
-EUROGARD_CLIENT_ID=your_client_id_here
-EUROGARD_CLIENT_SECRET=your_client_secret_here
-```
-
 ## Contributing
 
-1. Install uv
-1. Install project dependencies: `uv sync`
-1. Install pre-commit hooks: `uv run pre-commit install`
-1. Create a dedicated development branch: `git checkout -b <hyphen-delimited-branch-name>`
-1. Add your changes
-1. Run linters: `uv run pre-commit run --all-files`
-1. Run tests: `uv run pytest`
-1. Commit changes and open a pull request
+Check out [CONTRIBUTING.md](CONTRIBUTING.md) for further information.
 
 
 [1]: https://eurogard.de/software/m2v/
