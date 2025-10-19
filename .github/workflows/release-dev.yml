@@ -1,20 +1,19 @@
-name: "Release to PyPI"
+name: "Release to TestPyPI"
 
 on:
   push:
     tags:
-      - v*
-      - "!v*a*"
-      - "!v*b*"
-      - "!v*rc*"
-      - "!v*.post*"
-      - "!v*.dev*"
+      - v*a*
+      - v*b*
+      - v*rc*
+      - v*.post*
+      - v*.dev*
 
 jobs:
   run:
     runs-on: ubuntu-latest
     environment:
-      name: pypi
+      name: testpypi
     permissions:
       id-token: write
       contents: read
@@ -34,4 +33,4 @@ jobs:
         run: uv build
 
       - name: Publish to PyPI
-        run: uv publish
+        run: uv publish --index testpypi
