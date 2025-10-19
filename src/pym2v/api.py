@@ -165,6 +165,28 @@ class EurogardAPI:
         )
         return response.json()
 
+    @staticmethod
+    def get_machine_uuid(machine_name: str, machines: dict[str, Any]) -> str | None:
+        """
+        Get the machine UUID matching the specified name from a list of machines.
+
+        Args:
+            machine_name (str): The name of the machine to search for.
+            machines: A dictionary containing machine data with an 'entities' key
+                     that holds a list of machine objects. Each machine object
+                     should have 'name' and 'uuid' fields.
+
+        Returns:
+            str | None: UUID for machine that match the given name.
+                    Returns None if no matches are found.
+        """
+        matches = [m["uuid"] for m in machines["entities"] if m["name"] == machine_name]
+
+        if len(matches) == 0:
+            return None
+
+        return matches[0]
+
     def get_machine_measurements(
         self,
         machine_uuid: str,
