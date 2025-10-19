@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 
 import pandas as pd
+import pytest
 from requests.models import Response
 
 TEST_URL = "https://example.com/"
@@ -40,6 +41,15 @@ def test_get_machines(api, mocker):
     machines = api.get_machines()
     assert machines == {"machines": []}
     mock_get.assert_called_once()
+
+
+@pytest.mark.parametrize(("name", "expected"), [("test", "123"), ("non_existing_machine", None)])
+def test_get_machine_uuid(api, name, expected):
+    data = {"entities": [{"name": "test", "uuid": "123"}, {"name": "test2", "uuid": "456"}]}
+
+    actual = api.get_machine_uuid(machine_name=name, machines=data)
+
+    assert actual == expected
 
 
 def test_get_machine_measurements(api, mocker):

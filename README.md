@@ -70,7 +70,7 @@ Get the UUID of the machine your are interested in
 ```python
 MACHINE_NAME = "1337Machine"
 
-machine_uuid = [m["uuid"]for m in machines["entities"] if m["name"] == MACHINE_NAME][0]
+machine_uuid = api.get_machine_uuid(MACHINE_NAME, machines)
 ```
 
 Get the names of measurements for which you like to pull data
