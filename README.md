@@ -1,8 +1,7 @@
+# pym2v
+
 ![CI](https://github.com/bytecaretech/pym2v/actions/workflows/ci.yml/badge.svg)
 ![Docs](https://github.com/bytecaretech/pym2v/actions/workflows/docs.yml/badge.svg)
-
-
-# pym2v
 
 Python wrapper to inteact with [m2v][1] industrial IoT platform from [Eurogard][2].
 
