@@ -1,4 +1,5 @@
 import pytest
+from pydantic import SecretStr
 
 from pym2v.api import EurogardAPI
 from pym2v.settings import Settings
@@ -7,14 +8,14 @@ from pym2v.settings import Settings
 @pytest.fixture
 def api(mocker):
     settings = Settings(
-        base_url="https://example.com/",
+        base_url="https://example.com",
         client_id="client_id",
-        client_secret="client_secret",  # noqa: S106
+        client_secret=SecretStr("test"),  # noqa: S106
         username="username",
-        password="password",  # noqa: S106
+        password=SecretStr("test"),  # noqa: S106
     )
 
-    mocker.patch("requests_oauthlib.oauth2_session.OAuth2Session.fetch_token")
+    mocker.patch("httpx_auth.OAuth2ResourceOwnerPasswordCredentials.__call__", return_value=None)
     api = EurogardAPI(settings)
 
     return api
