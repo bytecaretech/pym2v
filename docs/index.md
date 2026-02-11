@@ -46,9 +46,11 @@ EUROGARD_CLIENT_SECRET=your_client_secret_here
 
 ## Usage
 
-Import the `EuroGardAPI` object and create an instance of it
+Import the `EurogardAPI` object and create an instance of it
 
 ```python
+from datetime import datetime, timedelta
+
 from pym2v.api import EurogardAPI
 
 
@@ -78,20 +80,22 @@ result = api.get_machine_measurements(machine_uuid)
 Turn the data returned by the API into a DataFrame for easier handling
 
 ```python
-measurements_df = pd.DataFrame.from_dict(result["entities"])
+import polars as pl
+
+measurements_df = pl.DataFrame(result["entities"])
 ```
 
 Get actual data
 
 ```python
-START_DATE = "2025-01-01"
-END_DATE = "2025-01-13"
-INTERVAL = "60s"
-MAX_FRAME_LENGTH = "30D"
+START_DATE = datetime(2025, 1, 1)
+END_DATE = datetime(2025, 1, 13)
+INTERVAL = timedelta(seconds=60)
+MAX_FRAME_LENGTH = timedelta(days=30)
 
 data_df = api.get_long_frame_from_names(
     machine_uuid=machine_uuid,
-    names=measurements_df.name.to_list(),
+    names=measurements_df["name"].to_list(),
     start=START_DATE,
     end=END_DATE,
     interval=INTERVAL,

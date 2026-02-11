@@ -1,28 +1,28 @@
-"""An API client for interacting with the Eurogard backend services."""
+"""API client for interacting with the Eurogard backend services."""
 
 import asyncio
+from datetime import datetime, timedelta
 from json import JSONDecodeError
 from typing import Any
 
-import pandas as pd
-from loguru import logger
-from oauthlib.oauth2 import LegacyApplicationClient
-from requests_oauthlib import OAuth2Session
+import httpx
+import polars as pl
+from httpx_auth import OAuth2ResourceOwnerPasswordCredentials
 from tenacity import retry, stop_after_attempt, wait_exponential_jitter
 from tqdm.auto import tqdm
 
 from .constants import TOKEN_ROUTE
+from .logger import get_logger
 from .settings import Settings
-from .types import IntInput, TsInput
 from .utils import _log_retry_attempt, batch_interval
 
-_limit = asyncio.Semaphore(5)
+logger = get_logger(__name__)
 
 
 class EurogardAPI:
     """Pythonic interface to interact with the Eurogard backend services."""
 
-    def __init__(self, settings: Settings | None = None):
+    def __init__(self, settings: Settings | None = None, max_concurrent_requests: int = 5):
         """
         EurogardAPI is the main class for interacting with the Eurogard m2v IoT platform.
 
@@ -31,41 +31,30 @@ class EurogardAPI:
         Args:
             settings (Settings, optional): An instance of the Settings class containing API configuration.
                 Defaults to None.
+            max_concurrent_requests (int, optional): Maximum number of concurrent async requests.
+                Defaults to 5.
         """
         if settings is None:
             settings = Settings()  # type: ignore
         self._settings = settings
-        self._token_url = settings.base_url + TOKEN_ROUTE
-        self._session = self.create_session()
+        self._token_url = f"{settings.base_url}{TOKEN_ROUTE}"
+        self._auth = self._create_auth()
+        self._client = httpx.Client(auth=self._auth, base_url=settings.base_url)
+        self._semaphore = asyncio.Semaphore(max_concurrent_requests)
 
-    def create_session(self) -> OAuth2Session:
-        """
-        Create an OAuth2 session for API communication.
+    def _create_auth(self) -> OAuth2ResourceOwnerPasswordCredentials:
+        """Create OAuth2 authentication handler.
 
         Returns:
-            OAuth2Session: An authenticated OAuth2 session.
+            OAuth2ResourceOwnerPasswordCredentials: Configured auth handler.
         """
-        extras: dict[str, Any] = {
-            "client_id": self._settings.client_id,
-            "client_secret": self._settings.client_secret.get_secret_value(),
-        }
-
-        client = LegacyApplicationClient(client_id=self._settings.client_id)
-        oauth = OAuth2Session(
-            client=client,
-            auto_refresh_url=self._token_url,
-            auto_refresh_kwargs=extras,
-            token_updater=lambda x: x,
-        )
-
-        oauth.fetch_token(
+        return OAuth2ResourceOwnerPasswordCredentials(
             token_url=self._token_url,
             username=self._settings.username,
             password=self._settings.password.get_secret_value(),
-            **extras,
+            client_id=self._settings.client_id,
+            client_secret=self._settings.client_secret.get_secret_value(),
         )
-
-        return oauth
 
     def get_user_info(self) -> dict[str, Any]:
         """
@@ -74,14 +63,10 @@ class EurogardAPI:
         Returns:
             dict[str, Any]: User information.
 
-        Example:
-            >>> api = EurogardAPI()
-            >>> user_info = api.get_user_info()
-            >>> print(user_info)
         """
-        response = self._session.get(
-            f"{self._settings.base_url}/backend/user-controller/meGUI",
-        )
+        response = self._client.get("/backend/user-controller/meGUI")
+        response.raise_for_status()
+
         return response.json()
 
     def get_routers(
@@ -104,22 +89,16 @@ class EurogardAPI:
 
         Returns:
             dict[str, Any]: List of routers.
-
-        Example:
-            >>> api = EurogardAPI()
-            >>> routers = api.get_routers()
-            >>> print(routers)
         """
-        params = {
-            "page": page,
-            "size": size,
-            "sort": sort,
-            "order": order,
-            "filter": filter,
-        }
-        response = self._session.get(
-            f"{self._settings.base_url}/backend/thing-gui-controller/filter",
-            params=params,
+        response = self._client.get(
+            "/backend/thing-gui-controller/filter",
+            params={
+                "page": page,
+                "size": size,
+                "sort": sort,
+                "order": order,
+                "filter": filter,
+            },
         )
         response.raise_for_status()
 
@@ -146,23 +125,19 @@ class EurogardAPI:
 
         Returns:
             dict[str, Any]: List of machines.
-
-        Example:
-            >>> api = EurogardAPI()
-            >>> machines = api.get_machines()
-            >>> print(machines)
         """
-        params = {
-            "page": page,
-            "size": size,
-            "sort": sort,
-            "order": order,
-            "filter": filter,
-        }
-        response = self._session.get(
-            f"{self._settings.base_url}/backend/machine-gui-controller/filter",
-            params=params,
+        response = self._client.get(
+            "/backend/machine-gui-controller/filter",
+            params={
+                "page": page,
+                "size": size,
+                "sort": sort,
+                "order": order,
+                "filter": filter,
+            },
         )
+        response.raise_for_status()
+
         return response.json()
 
     @staticmethod
@@ -209,23 +184,16 @@ class EurogardAPI:
 
         Returns:
             dict[str, Any]: Machine measurements.
-
-        Example:
-            >>> api = EurogardAPI()
-            >>> measurements = api.get_machine_measurements("machine-uuid")
-            >>> print(measurements)
         """
-        params = {
-            "page": page,
-            "size": size,
-            "sort": sort,
-            "order": order,
-            "filter": filter,
-        }
-
-        response = self._session.get(
-            f"{self._settings.base_url}/backend/machine-controller/{machine_uuid}/measurements",
-            params=params,
+        response = self._client.get(
+            f"/backend/machine-controller/{machine_uuid}/measurements",
+            params={
+                "page": page,
+                "size": size,
+                "sort": sort,
+                "order": order,
+                "filter": filter,
+            },
         )
         response.raise_for_status()
 
@@ -253,23 +221,16 @@ class EurogardAPI:
 
         Returns:
             dict[str, Any]: Machine setpoints.
-
-        Example:
-            >>> api = EurogardAPI()
-            >>> setpoints = api.get_machine_setpoints("machine-uuid")
-            >>> print(setpoints)
         """
-        params = {
-            "page": page,
-            "size": size,
-            "sort": sort,
-            "order": order,
-            "filter": filter,
-        }
-
-        response = self._session.get(
-            f"{self._settings.base_url}/backend/machine-controller/{machine_uuid}/set-points",
-            params=params,
+        response = self._client.get(
+            f"/backend/machine-controller/{machine_uuid}/set-points",
+            params={
+                "page": page,
+                "size": size,
+                "sort": sort,
+                "order": order,
+                "filter": filter,
+            },
         )
         response.raise_for_status()
 
@@ -296,11 +257,6 @@ class EurogardAPI:
 
         Returns:
             dict[str, Any]: Historical data.
-
-        Example:
-            >>> api = EurogardAPI()
-            >>> data = api.get_historical_data("machine-uuid", ["item1", "item2"], 1622547800, 1622634200, 60)
-            >>> print(data)
         """
         data = {
             "condition": "",
@@ -311,110 +267,102 @@ class EurogardAPI:
             "intervalInS": interval_in_s,
         }
 
-        logger.debug(f"Calling get_historical_data with {data=}")
-        response = self._session.post(
-            f"{self._settings.base_url}/backend/machine-controller/postDataByRangeAndInterval",
+        logger.debug("Calling get_historical_data with data=%s", data)
+        response = self._client.post(
+            "/backend/machine-controller/postDataByRangeAndInterval",
             json=data,
         )
 
         response.raise_for_status()
+
         try:
             result = response.json()
             return result
         except JSONDecodeError:
-            logger.error(f"Error decoding JSON: {response.text}")
+            logger.error("Error decoding JSON: %s", response.text)
             raise
 
     def get_frame_from_names(
         self,
         machine_uuid: str,
         names: list[str],
-        start: TsInput,
-        end: TsInput,
-        interval: IntInput,
-    ) -> pd.DataFrame:
+        start: datetime,
+        end: datetime,
+        interval: timedelta,
+    ) -> pl.DataFrame:
         """
         Retrieve a DataFrame of historical data for a specific machine.
 
         Args:
             machine_uuid (str): Machine UUID.
             names (list[str]): List of data definition key item names.
-            start (TsInput): Start timestamp.
-            end (TsInput): End timestamp.
-            interval (IntInput): Interval.
+            start (datetime): Start timestamp.
+            end (datetime): End timestamp.
+            interval (timedelta): Interval between data points.
 
         Returns:
-            pd.DataFrame: DataFrame of historical data.
-
-        Example:
-            >>> api = EurogardAPI()
-            >>> df = api.get_frame_from_names("machine-uuid", ["item1", "item2"], "2021-06-01", "2021-06-02", "1H")
-            >>> print(df)
+            pl.DataFrame: DataFrame of historical data with timestamp column.
         """
-        ts_start = pd.Timestamp(start)
-        ts_end = pd.Timestamp(end)
-        int_interval = pd.Timedelta(interval)
-
         result = self.get_historical_data(
             machine_uuid,
             data_definition_key_item_names=names,
-            start=int(ts_start.timestamp() * 1000),
-            end=int(ts_end.timestamp() * 1000),
-            interval_in_s=int(int_interval.total_seconds()),
+            start=int(start.timestamp() * 1000),
+            end=int(end.timestamp() * 1000),
+            interval_in_s=int(interval.total_seconds()),
         )
 
-        dfs = {}
+        dataframes = []
         for res in result["results"]:
-            dff = pd.DataFrame.from_records(res["values"])
-            dff = dff.set_index(pd.to_datetime(dff["timestamp"], unit="ms"))
-            dfs[res["dataDefinitionKeyItemName"]] = dff["value"]
+            if not res["values"]:
+                continue
+            df = pl.DataFrame(res["values"])
+            df = df.with_columns(pl.from_epoch("timestamp", time_unit="ms").alias("timestamp")).select(
+                ["timestamp", pl.col("value").alias(res["dataDefinitionKeyItemName"])]
+            )
+            dataframes.append(df)
 
-        if all(d.empty for d in dfs.values()):
-            logger.warning(f"No data found for {names=} in the interval {start=} -> {end=}")
-            df_result = pd.DataFrame()
-        else:
-            df_result = pd.concat(dfs, axis="columns")
+        if not dataframes:
+            logger.warning("No data found for names=%s in the interval start=%s -> end=%s", names, start, end)
+            return pl.DataFrame()
 
-        return df_result
+        df_result = dataframes[0]
+        for df in dataframes[1:]:
+            df_result = df_result.join(df, on="timestamp", how="full", coalesce=True)
+
+        return df_result.sort("timestamp")
 
     def get_long_frame_from_names(
         self,
         machine_uuid: str,
         names: list[str],
-        start: TsInput,
-        end: TsInput,
-        interval: IntInput,
-        max_frame_length: IntInput,
+        start: datetime,
+        end: datetime,
+        interval: timedelta,
+        max_frame_length: timedelta,
         show_progress: bool = False,
-    ) -> pd.DataFrame:
+    ) -> pl.DataFrame:
         """
         Retrieve a long DataFrame of historical data for a specific machine.
 
         Args:
             machine_uuid (str): Machine UUID.
             names (list[str]): List of data definition key item names.
-            start (TsInput): Start timestamp.
-            end (TsInput): End timestamp.
-            interval (IntInput): Time interval in which the sensor data is returned (equi distant).
-            max_frame_length (IntInput): Maximum interval length for a single API request.
+            start (datetime): Start timestamp.
+            end (datetime): End timestamp.
+            interval (timedelta): Time interval between data points.
+            max_frame_length (timedelta): Maximum interval length for a single API request.
             show_progress (bool, optional): Whether to show progress. Defaults to False.
 
         Returns:
-            pd.DataFrame: Long DataFrame of historical data.
-
-        Example:
-            >>> api = EurogardAPI()
-            >>> df = api.get_long_frame_from_names(
-            ...     "machine-uuid", ["item1", "item2"], "2021-06-01", "2021-06-02", "1H", "30D"
-            ... )
-            >>> print(df)
+            pl.DataFrame: Long DataFrame of historical data.
         """
         batches = list(batch_interval(start, end, max_frame_length))
         if show_progress:
             batches = tqdm(batches)
-        dfs = []
 
-        for left, right in tqdm(batches):
+        dataframes = []
+
+        for left, right in batches:
             data = self.get_frame_from_names(
                 machine_uuid=machine_uuid,
                 names=names,
@@ -422,97 +370,86 @@ class EurogardAPI:
                 end=right,
                 interval=interval,
             )
-            if not data.empty:
-                dfs.append(data)
+            if not data.is_empty():
+                dataframes.append(data)
 
-        df_result = pd.concat(dfs)
-        return df_result
+        if not dataframes:
+            return pl.DataFrame()
 
-    async def asmart_get_frame_from_names(
+        return pl.concat(dataframes).sort("timestamp")
+
+    async def aget_frame_from_names(
         self,
         machine_uuid: str,
         names: list[str],
-        start: TsInput,
-        end: TsInput,
-        interval: IntInput,
-        timeout: int = 15,
-        max_recursion: int = 10,
-    ) -> pd.DataFrame:
+        start: datetime,
+        end: datetime,
+        interval: timedelta,
+        max_frame_length: timedelta,
+        timeout: float = 30.0,
+    ) -> pl.DataFrame:
         """
         Asynchronously retrieve a DataFrame of historical data for a specific machine.
+
+        Fetches data in batches concurrently for speedup.
 
         Args:
             machine_uuid (str): Machine UUID.
             names (list[str]): List of data definition key item names.
-            start (TsInput): Start timestamp.
-            end (TsInput): End timestamp.
-            interval (IntInput): Interval.
-            timeout (int, optional): Timeout in seconds. Defaults to 15.
-            max_recursion (int, optional): Maximum recursion depth. Defaults to 10.
+            start (datetime): Start timestamp.
+            end (datetime): End timestamp.
+            interval (timedelta): Interval between data points.
+            max_frame_length (timedelta): Maximum length of each batch.
+            timeout (float, optional): Timeout in seconds. Defaults to 30.0.
 
         Returns:
-            pd.DataFrame: DataFrame of historical data.
-
-        Example:
-            >>> api = EurogardAPI()
-            >>> df = await api.asmart_get_frame_from_names(
-            ...     "machine-uuid", ["item1", "item2"], "2021-06-01", "2021-06-02", "1H"
-            ... )
-            >>> print(df)
+            pl.DataFrame: DataFrame of historical data.
         """
-        ts_start = pd.Timestamp(start)
-        ts_end = pd.Timestamp(end)
-        int_interval = pd.Timedelta(interval)
-        loop = asyncio.get_event_loop()
+        batches = list(batch_interval(start, end, max_frame_length))
 
-        # Try to get the data with self.get_frame_from_names with a timeout of `timeout` seconds
-        # if it fails, split time interval in run the function recursively with each half
-        try:
-            # run the function in run_in_executor
-            task = loop.run_in_executor(
-                None,
-                self.get_frame_from_names,
-                machine_uuid,
-                names,
-                ts_start,
-                ts_end,
-                int_interval,
-            )
-            async with _limit:
-                df_result = await asyncio.wait_for(task, timeout=timeout)
+        async def fetch_batch(batch_start: datetime, batch_end: datetime) -> pl.DataFrame:
+            async with self._semaphore:
+                async with httpx.AsyncClient(
+                    auth=self._auth, base_url=self._settings.base_url, timeout=timeout
+                ) as client:
+                    data = {
+                        "condition": "",
+                        "values": names,
+                        "start": int(batch_start.timestamp() * 1000),
+                        "end": int(batch_end.timestamp() * 1000),
+                        "machineUuid": machine_uuid,
+                        "intervalInS": int(interval.total_seconds()),
+                    }
+                    response = await client.post(
+                        "/backend/machine-controller/postDataByRangeAndInterval",
+                        json=data,
+                    )
+                    response.raise_for_status()
+                    result = response.json()
 
-        except asyncio.TimeoutError:
-            logger.info(f"Request took more than {timeout=}s -> splitting the interval")
-            if max_recursion == 0:
-                raise RecursionError("Max recursion depth reached") from asyncio.TimeoutError
+                dataframes = []
+                for res in result["results"]:
+                    if not res["values"]:
+                        continue
+                    df = pl.DataFrame(res["values"])
+                    df = df.with_columns(pl.from_epoch("timestamp", time_unit="ms").alias("timestamp")).select(
+                        ["timestamp", pl.col("value").alias(res["dataDefinitionKeyItemName"])]
+                    )
+                    dataframes.append(df)
 
-            mid = ts_start + (ts_end - ts_start) / 2
-            # Round mid down to full minutes
-            mid = mid.floor("min")
+                if not dataframes:
+                    return pl.DataFrame()
 
-            logger.info(f"New intervals: {ts_start=} -> {mid=} and {mid=} -> {ts_end=}")
+                df_result = dataframes[0]
+                for df in dataframes[1:]:
+                    df_result = df_result.join(df, on="timestamp", how="full", coalesce=True)
 
-            frames = await asyncio.gather(
-                self.asmart_get_frame_from_names(
-                    machine_uuid,
-                    names,
-                    ts_start,
-                    mid,
-                    int_interval,
-                    timeout,
-                    max_recursion - 1,
-                ),
-                self.asmart_get_frame_from_names(
-                    machine_uuid,
-                    names,
-                    mid,
-                    ts_end,
-                    int_interval,
-                    timeout,
-                    max_recursion - 1,
-                ),
-            )
+                return df_result
 
-            df_result = pd.concat(frames, axis="index")
+        results = await asyncio.gather(*[fetch_batch(left, right) for left, right in batches])
+        dataframes = [df for df in results if not df.is_empty()]
 
-        return df_result
+        if not dataframes:
+            return pl.DataFrame()
+
+        return pl.concat(dataframes).sort("timestamp")
