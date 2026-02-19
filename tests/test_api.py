@@ -52,14 +52,14 @@ def test_get_machine_uuid(api, name, expected):
     assert actual == expected
 
 
-def test_get_machine_measurements(api, mocker):
+def test_get_machine_measurement_names(api, mocker):
     mock_get = mocker.patch.object(api._client, "get")
     mock_response = mocker.Mock(spec=Response)
     mock_response.json.return_value = {"measurements": []}
     mock_get.return_value = mock_response
 
     machine_uuid = "1234"
-    measurements = api.get_machine_measurements(machine_uuid=machine_uuid)
+    measurements = api.get_machine_measurement_names(machine_uuid=machine_uuid)
     assert measurements == {"measurements": []}
     mock_get.assert_called_once_with(
         f"/backend/machine-controller/{machine_uuid}/measurements",
