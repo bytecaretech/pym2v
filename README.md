@@ -2,8 +2,9 @@
 
 ![CI](https://github.com/bytecaretech/pym2v/actions/workflows/ci.yml/badge.svg)
 ![Docs](https://github.com/bytecaretech/pym2v/actions/workflows/docs.yml/badge.svg)
+![PyPI](https://img.shields.io/pypi/v/pym2v)
 
-Python wrapper to inteact with [m2v][1] industrial IoT platform from [Eurogard][2].
+Python wrapper to interact with [m2v][1] industrial IoT platform from [Eurogard][2].
 
 ## Prerequisites
 
@@ -12,7 +13,7 @@ Python wrapper to inteact with [m2v][1] industrial IoT platform from [Eurogard][
 
 ## Installation
 
-py2mv is available as a Python package and can be installed via pip or [uv][3].
+pym2v is available as a Python package and can be installed via pip or [uv][3].
 
 ### Via pip
 
@@ -33,7 +34,7 @@ To authenticate with the Eurogard API, you need to provide the following credent
 - Client ID
 - Client Secret
 
-You can do this either by using an `.env` file (recommended) or by setting environment variables directly.
+You can do this either by using an `.env` file or by setting environment variables directly.
 
 ### Using an .env file
 
@@ -85,7 +86,7 @@ Turn the data returned by the API into a DataFrame for easier handling
 ```python
 import polars as pl
 
-measurements_df = pl.DataFrame(result["entities"])
+measurement_names_df = pl.DataFrame(result["entities"])
 ```
 
 Get actual data
@@ -95,7 +96,7 @@ START_DATE = datetime(2025, 1, 1)
 END_DATE = datetime(2025, 1, 13)
 INTERVAL = timedelta(seconds=60)
 MAX_FRAME_LENGTH = timedelta(days=30)
-NAMES = [col.strip() for col in measurements_df.get_column("name").to_list()]
+NAMES = [col.strip() for col in measurement_names_df.get_column("name").to_list()]
 
 data_df = api.get_long_frame_from_names(
     machine_uuid=machine_uuid,

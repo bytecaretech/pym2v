@@ -82,7 +82,7 @@ Turn the data returned by the API into a DataFrame for easier handling
 ```python
 import polars as pl
 
-measurements_df = pl.DataFrame(result["entities"])
+measurement_names_df = pl.DataFrame(result["entities"])
 ```
 
 Get actual data
@@ -92,7 +92,7 @@ START_DATE = datetime(2025, 1, 1)
 END_DATE = datetime(2025, 1, 13)
 INTERVAL = timedelta(seconds=60)
 MAX_FRAME_LENGTH = timedelta(days=30)
-NAMES = [col.strip() for col in measurements_df.get_column("name").to_list()]
+NAMES = [col.strip() for col in measurement_names_df.get_column("name").to_list()]
 
 data_df = api.get_long_frame_from_names(
     machine_uuid=machine_uuid,
