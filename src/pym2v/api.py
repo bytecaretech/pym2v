@@ -162,7 +162,7 @@ class EurogardAPI:
 
         return matches[0]
 
-    def get_machine_measurements(
+    def get_machine_measurement_names(
         self,
         machine_uuid: str,
         page: int = 0,
@@ -172,7 +172,7 @@ class EurogardAPI:
         filter: str = "__archived:false",
     ) -> dict[str, Any]:
         """
-        Retrieve measurements for a specific machine.
+        Retrieve measurement names for a specific machine.
 
         Args:
             machine_uuid (str): Machine UUID.
@@ -291,7 +291,7 @@ class EurogardAPI:
         interval: timedelta,
     ) -> pl.DataFrame:
         """
-        Retrieve a DataFrame of historical data for a specific machine.
+        Retrieve a DataFrame of historical data for a specific machine from measurement names.
 
         Args:
             machine_uuid (str): Machine UUID.
