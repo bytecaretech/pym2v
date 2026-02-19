@@ -3,11 +3,12 @@
 ## Build, Test, and Lint
 
 ```bash
-# Install dependencies
-uv sync
+# Preferred: use Taskfile commands first
+task setup
+task lint
+task test
 
-# Run all tests with coverage
-uv run pytest
+# Individual commands (uv)
 
 # Run a single test file
 uv run pytest tests/test_api.py
@@ -16,7 +17,13 @@ uv run pytest tests/test_api.py
 uv run pytest -k "test_get_machines"
 
 # Run linters (ruff + pre-commit hooks)
-uv run pre-commit run --all-files
+uv tool run pre-commit run --all-files
+
+# Run all tests
+uv run pytest
+
+# Install dependencies
+uv sync --all-groups --all-extras
 
 # Build docs locally
 uv run mkdocs serve
