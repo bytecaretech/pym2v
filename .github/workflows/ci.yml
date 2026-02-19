@@ -3,34 +3,34 @@ name: CI
 on: [push]
 
 jobs:
-    build:
-        runs-on: ubuntu-latest
-        steps:
-            - name: Check out source code
-              uses: actions/checkout@v6
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@v6
 
-            - name: Install uv
-              uses: astral-sh/setup-uv@v7
-              with:
-                enable-cache: true
-                cache-dependency-glob: "uv.lock"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
 
-            - name: Set up Python
-              uses: actions/setup-python@v6
-              with:
-                python-version-file: ".python-version"
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: "pyproject.toml"
 
-            - name: Install dependencies
-              run: uv sync
+      - name: Install dependencies
+        run: uv sync
 
-            - name: Cache pre-commit environment
-              uses: actions/cache@v5
-              with:
-                path: ~/.cache/pre-commit
-                key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+      - name: Cache pre-commit environment
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
 
-            - name: Run linters
-              run: uv run pre-commit run --all-files
+      - name: Run linters
+        run: uv run pre-commit run --all-files
 
-            - name: Run tests
-              run: uv run pytest
+      - name: Run tests
+        run: uv run pytest

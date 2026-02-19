@@ -1,6 +1,6 @@
 [project]
 name = "pym2v"
-version = "0.1.4"
+version = "0.2.0"
 description = "Python wrapper to interact with the Eurogard m2v IoT platform"
 authors = [
     {name = "Stefan Langenbach", email = "stefan.langenbach@bytecare.tech"}
@@ -20,13 +20,12 @@ classifiers = [
     "Topic :: Software Development",
     "Typing :: Typed"
 ]
-requires-python = ">=3.12"
+requires-python = ">=3.12,<3.14"
 dependencies = [
-    "loguru>=0.7.3",
-    "pandas[excel]>=2.2.3",
-    "pyarrow>=21.0.0",
+    "httpx>=0.28.0",
+    "httpx-auth>=0.23.0",
+    "polars>=1.0.0",
     "pydantic-settings>=2.6.1",
-    "requests-oauthlib>=2.0.0",
     "tenacity>=9.0.0",
     "tqdm>=4.67.1",
 ]
@@ -45,6 +44,7 @@ dev = [
     "pre-commit>=4.0.1",
     "nbconvert>=7.16.4",
     "pytest-mock>=3.14.0",
+    "ty>=0.0.16",
 ]
 
 docs = [
@@ -62,7 +62,7 @@ docstring-code-format = true
 docstring-code-line-length = "dynamic"
 
 [tool.ruff.lint]
-select = ["B", "E", "D", "F", "I", "S", "PD", "PT", "SIM"]
+select = ["B", "E", "D", "F", "I", "S", "PT", "SIM"]
 ignore = ["D211", "D212"]
 
 [tool.ruff.lint.per-file-ignores]
