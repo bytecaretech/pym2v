@@ -1,6 +1,6 @@
 # Home
 
-Python wrapper to inteact with [m2v][1] industrial IoT platform from [Eurogard][2].
+Python wrapper to interact with [m2v][1] industrial IoT platform from [Eurogard][2].
 
 ## Prerequisites
 
@@ -9,12 +9,12 @@ Python wrapper to inteact with [m2v][1] industrial IoT platform from [Eurogard][
 
 ## Installation
 
-py2mv is available as a Python package and can be installed via pip or [uv][3].
+pym2v is available as a Python package and can be installed via pip or [uv][3].
 
 ### Via pip
 
 1. Create a virtual environment: `python3 -m venv .venv`
-1. Activate the virtual environment: `source .venv/bin/active`
+1. Activate the virtual environment: `source .venv/bin/activate`
 1. Install pym2v via pip: `pip install pym2v`
 
 ### Via uv
@@ -63,7 +63,7 @@ Retrieve a list of machines
 machines = api.get_machines()
 ```
 
-Get the UUID of the machine your are interested in
+Get the UUID of the machine you are interested in
 
 ```python
 MACHINE_NAME = "1337Machine"
