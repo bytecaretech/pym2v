@@ -2,7 +2,7 @@
 
 1. Install [uv][1]
 1. Install [task][2]
-1. Setup the project: `task setup`
+1. Set up the project: `task setup`
 1. Create a dedicated development branch: `git checkout -b <hyphen-delimited-branch-name>`
 1. Add your changes
 1. Run linters: `task lint`
