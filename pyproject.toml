@@ -1,6 +1,6 @@
 [project]
 name = "pym2v"
-version = "0.2.0"
+version = "0.3.0"
 description = "Python wrapper to interact with the Eurogard m2v IoT platform"
 authors = [
     {name = "Stefan Langenbach", email = "stefan.langenbach@bytecare.tech"}
@@ -34,6 +34,9 @@ dependencies = [
 Homepage = "https://www.bytecare.tech"
 Documentation = "https://www.bytecare.tech/pym2v"
 Repository = "https://github.com/bytecaretech/pym2v"
+
+[project.scripts]
+pym2v = "pym2v.cli:main"
 
 [dependency-groups]
 dev = [
@@ -85,7 +88,7 @@ branch = true
 source = ["src"]
 
 [tool.coverage.report]
-fail_under = 60
+fail_under = 80
 
 [[tool.uv.index]]
 name = "testpypi"
@@ -94,5 +97,5 @@ publish-url = "https://test.pypi.org/legacy/"
 explicit = true
 
 [build-system]
-requires = ["uv_build>=0.9.4,<0.11.0"]
+requires = ["uv_build>=0.11.7,<0.12.0"]
 build-backend = "uv_build"
