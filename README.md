@@ -41,7 +41,7 @@ You can do this either by using an `.env` file or by setting environment variabl
 Rename the `.env.example` at the root of the project to `.env`, and replace the placeholder values with your actual credentials.
 
 ```
-EUROGARD_BASEURL=https://eurogard.cloud
+EUROGARD_BASE_URL=https://eurogard.cloud
 EUROGARD_USERNAME=your_username_here
 EUROGARD_PASSWORD=your_password_here
 EUROGARD_CLIENT_ID=your_client_id_here
@@ -107,6 +107,24 @@ data_df = api.get_long_frame_from_names(
     max_frame_length=MAX_FRAME_LENGTH,
 )
 ```
+
+## CLI
+
+After installing pym2v, you can also use the CLI:
+
+```bash
+pym2v user-info
+pym2v machines --page 0 --size 25
+pym2v machine-uuid --name "1337Machine"
+pym2v data \
+  --machine-uuid "<machine_uuid>" \
+  --names temperature pressure \
+  --start 2025-01-01T00:00:00 \
+  --end 2025-01-01T01:00:00 \
+  --format csv
+```
+
+For full command reference, see [docs/cli.md](docs/cli.md).
 
 ## Contributing
 
