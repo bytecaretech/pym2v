@@ -1,0 +1,53 @@
+# pym2v — LLM agent guide
+
+## Project overview
+- Python client + CLI for Eurogard m2v API.
+- Core library lives in `src/pym2v/`; CLI entrypoint is `pym2v`.
+- Main public API: `from pym2v import EurogardAPI, Settings`.
+
+## Setup / test / lint
+- Preferred:
+  - `task setup` (bootstrap env + deps)
+  - `task test` (runs `uv run pytest`)
+  - `task lint` (runs pre-commit hooks)
+- Direct `uv` shortcuts:
+  - `uv sync --all-groups --all-extras`
+  - `uv run pytest`
+  - `uv tool run pre-commit run --all-files`
+
+## Architecture map (key files)
+- `src/pym2v/api.py` — `EurogardAPI` client implementation.
+- `src/pym2v/settings.py` — `Settings` model (`pydantic-settings`).
+- `src/pym2v/cli.py` — argparse CLI, command dispatch, structured errors.
+- `src/pym2v/utils.py` — utility helpers (batching, retry logging).
+- `tests/test_api.py` — API behavior/unit tests.
+- `tests/test_cli.py` — CLI parsing/dispatch/error tests.
+- `README.md` and `docs/cli.md` — user-facing usage docs.
+
+## Configuration patterns (important)
+- **Library code (preferred explicit config):**
+  - `settings = Settings(...)`
+  - `api = EurogardAPI(settings=settings)`
+- **Convenience path (env/.env oriented):**
+  - `api = EurogardAPI.from_env(env_file=".env")`
+- `Settings.from_env` does **not** exist.
+- CLI uses `EurogardAPI.from_env()` internally.
+- Env vars use `EUROGARD_*` names, including:
+  - `EUROGARD_BASE_URL`
+  - `EUROGARD_USERNAME`
+  - `EUROGARD_PASSWORD`
+  - `EUROGARD_CLIENT_ID`
+  - `EUROGARD_CLIENT_SECRET`
+
+## Coding / testing conventions
+- Keep changes small and typed; follow existing docstring + type-hint style.
+- Tests use `pytest` + `pytest-mock`.
+- Prefer clear Arrange/Act/Assert blocks in tests.
+- For CLI errors, keep JSON error payload shape consistent (`{"error": {"type", "message"}}`).
+
+## Common pitfalls (do / don’t)
+- Do pass `settings=` when constructing `EurogardAPI` directly.
+- Do use `EurogardAPI.from_env()` for CLI-like convenience flows.
+- Don’t call `EurogardAPI()` without settings.
+- Don’t introduce `Settings.from_env`; use `EurogardAPI.from_env`.
+- Don’t use wrong env var spelling (`EUROGARD_BASE_URL` is correct).

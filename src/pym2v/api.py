@@ -22,25 +22,26 @@ logger = get_logger(__name__)
 class EurogardAPI:
     """Pythonic interface to interact with the Eurogard backend services."""
 
-    def __init__(self, settings: Settings | None = None, max_concurrent_requests: int = 5):
+    def __init__(self, settings: Settings, max_concurrent_requests: int = 5):
         """
         EurogardAPI is the main class for interacting with the Eurogard m2v IoT platform.
 
-        If settings are not provided, they will be loaded from environment variables or a .env file.
-
         Args:
-            settings (Settings, optional): An instance of the Settings class containing API configuration.
-                Defaults to None.
+            settings (Settings): An instance of the Settings class containing API configuration.
             max_concurrent_requests (int, optional): Maximum number of concurrent async requests.
                 Defaults to 5.
         """
-        if settings is None:
-            settings = Settings()  # type: ignore
         self._settings = settings
         self._token_url = f"{settings.base_url}{TOKEN_ROUTE}"
         self._auth = self._create_auth()
         self._client = httpx.Client(auth=self._auth, base_url=settings.base_url)
         self._semaphore = asyncio.Semaphore(max_concurrent_requests)
+
+    @classmethod
+    def from_env(cls, env_file: str = ".env") -> "EurogardAPI":
+        """Create an API client from environment variables and an explicit ``.env`` file."""
+        settings = Settings(_env_file=env_file)  # type: ignore error[missing-argument,unknown-argument]
+        return cls(settings=settings)
 
     def _create_auth(self) -> OAuth2ResourceOwnerPasswordCredentials:
         """Create OAuth2 authentication handler.

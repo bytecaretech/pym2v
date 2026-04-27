@@ -1,9 +1,11 @@
 from datetime import datetime, timedelta
+from typing import Any, cast
 
 import polars as pl
 import pytest
 from httpx import Response
 
+from pym2v.api import EurogardAPI
 from pym2v.utils import batch_interval
 
 
@@ -159,3 +161,45 @@ def test_batch_interval():
     assert batches[0][1] == datetime(2021, 6, 2)
     assert batches[1][0] == datetime(2021, 6, 2)
     assert batches[1][1] == datetime(2021, 6, 3)
+
+
+def test_eurogard_api_without_settings_raises_type_error():
+    with pytest.raises(TypeError):
+        cast(Any, EurogardAPI)()
+
+
+def test_eurogard_api_from_env_reads_explicit_dotenv_file(tmp_path, monkeypatch, mocker):
+    dotenv_file = tmp_path / "custom.env"
+    dotenv_file.write_text(
+        "\n".join(
+            [
+                "EUROGARD_BASE_URL=https://example.com",
+                "EUROGARD_USERNAME=username",
+                "EUROGARD_PASSWORD=password",
+                "EUROGARD_CLIENT_ID=client-id",
+                "EUROGARD_CLIENT_SECRET=client-secret",
+            ]
+        )
+    )
+    for env_name in (
+        "EUROGARD_BASE_URL",
+        "EUROGARD_USERNAME",
+        "EUROGARD_PASSWORD",
+        "EUROGARD_CLIENT_ID",
+        "EUROGARD_CLIENT_SECRET",
+    ):
+        monkeypatch.delenv(env_name, raising=False)
+    mocker.patch("httpx_auth.OAuth2ResourceOwnerPasswordCredentials.__call__", return_value=None)
+
+    api = EurogardAPI.from_env(env_file=str(dotenv_file))
+
+    assert api._settings.base_url == "https://example.com"
+    assert api._settings.username == "username"
+    assert api._settings.password.get_secret_value() == "password"
+    assert api._settings.client_id == "client-id"
+    assert api._settings.client_secret.get_secret_value() == "client-secret"
+
+
+def test_eurogard_api_from_env_rejects_max_concurrent_requests_argument():
+    with pytest.raises(TypeError):
+        EurogardAPI.from_env(max_concurrent_requests=3)  # type: ignore call-arg

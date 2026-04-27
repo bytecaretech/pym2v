@@ -34,7 +34,7 @@ To authenticate with the Eurogard API, you need to provide the following credent
 - Client ID
 - Client Secret
 
-You can do this either by using an `.env` file or by setting environment variables directly.
+You can do this either by setting environment variables directly, or by loading values from an `.env` file explicitly.
 
 ### Using an .env file
 
@@ -50,15 +50,30 @@ EUROGARD_CLIENT_SECRET=your_client_secret_here
 
 ## Usage
 
-Import the `EurogardAPI` object and create an instance of it
+For library usage, create explicit `Settings` and pass them to `EurogardAPI`:
 
 ```python
 from datetime import datetime, timedelta
 
-from pym2v.api import EurogardAPI
+from pym2v import EurogardAPI, Settings
 
 
-api = EurogardAPI()
+settings = Settings(
+    base_url="https://eurogard.cloud",
+    username="your_username_here",
+    password="your_password_here",
+    client_id="your_client_id_here",
+    client_secret="your_client_secret_here",
+)
+api = EurogardAPI(settings=settings)
+```
+
+If you prefer `.env` loading convenience:
+
+```python
+from pym2v import EurogardAPI
+
+api = EurogardAPI.from_env()
 ```
 
 Retrieve a list of machines

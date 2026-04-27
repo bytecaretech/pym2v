@@ -461,7 +461,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         return int(exc.code)  # type: ignore error[invalid-argument-type]
 
     try:
-        api = EurogardAPI()
+        api = EurogardAPI.from_env()
         output = run(args, api)
         if output is not None:
             _serialize_output(output)
