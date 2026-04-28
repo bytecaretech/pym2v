@@ -3,7 +3,7 @@
 import asyncio
 from datetime import datetime, timedelta
 from json import JSONDecodeError
-from typing import Any
+from typing import Any, Self
 
 import httpx
 import polars as pl
@@ -38,7 +38,7 @@ class EurogardAPI:
         self._semaphore = asyncio.Semaphore(max_concurrent_requests)
 
     @classmethod
-    def from_env(cls, env_file: str = ".env") -> "EurogardAPI":
+    def from_env(cls, env_file: str = ".env") -> Self:
         """Create an API client from environment variables and an explicit ``.env`` file."""
         settings = Settings(_env_file=env_file)  # type: ignore error[missing-argument,unknown-argument]
         return cls(settings=settings)
