@@ -69,3 +69,13 @@ tasks:
       - git tag v$(uv version --short)
       - git push --tags
     desc: Create and push a git tag for the current version
+
+  test-release:
+    cmds:
+      - |
+        uvx \
+          --with pym2v \
+          --env-file .env \
+          --index testpypi \
+          python -c "from pym2v.api import EurogardAPI; print(EurogardAPI().get_user_info())"
+    desc: Test release on TestPyPI
