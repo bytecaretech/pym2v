@@ -1,3 +1,5 @@
+pym2v is a Python wrapper for interacting with the m2v industrial IoT platform from Eurogard.
+
 ## Agent skills
 
 ### Issue tracker
