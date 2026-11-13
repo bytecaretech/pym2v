@@ -6,6 +6,10 @@ theme:
   palette:
     primary: deep purple
 
+exclude_docs: |
+  /agents/
+  /adr/
+
 plugins:
   - search
   - mkdocstrings:
